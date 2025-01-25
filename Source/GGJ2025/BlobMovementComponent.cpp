@@ -46,10 +46,17 @@ void UBlobMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		// Iterate all blob atoms in BlobActor
 		for (auto& Atom : BlobActor->BubbleAtoms)
 		{
-			if (Atom.bMoving == false)
-			{
-				continue;
-			}
+
+
+			// Calculate shake offset for Z axis
+			float ZOffset = FMath::Sin(CurrentGameTime / ShakePeriod) * ShakeDistance;
+
+			// Calculate shake offset for X axis 
+			float XOffset = FMath::Cos(CurrentGameTime / ShakePeriod) * ShakeDistance;
+
+			// Apply the shake offset to the Actor's location
+			FVector Offset = FVector(XOffset, 0.0f, ZOffset);
+
 
 			// Calculate the lifetime of the atom
 			float AtomLifetime = CurrentGameTime - Atom.SpawnTime;
@@ -66,8 +73,12 @@ void UBlobMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                 Atom.Speed += Acceleration * DeltaTime;
 
                 // Get the location of the atom
-                FVector AtomLocation = CachedSplineComponent->GetLocationAtSplinePoint(Atom.SplinePointIndex, ESplineCoordinateSpace::World);
-                AtomLocation += BubbleFloatDirection * Atom.Speed * DeltaTime;
+                FVector AtomLocation = CachedSplineComponent->GetLocationAtSplinePoint(Atom.SplinePointIndex, ESplineCoordinateSpace::World);                
+                AtomLocation += Offset;
+				if (Atom.bMoving)
+				{
+					AtomLocation += BubbleFloatDirection * Atom.Speed * DeltaTime;
+				}
                 CachedSplineComponent->SetLocationAtSplinePoint(Atom.SplinePointIndex, AtomLocation, ESplineCoordinateSpace::World);
 
                 Atom.SphereCollision->SetWorldLocation(AtomLocation);
