@@ -1,12 +1,10 @@
 #pragma once
 
-#include "BubbleBlob.h"
-#include "BubbleGameMode.h"
-#include "GameFramework/Actor.h"
-#include "Engine/World.h"
+#include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
 #include "BlobControllerComponent.generated.h"
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS( Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class GGJ2025_API UBlobControllerComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -34,6 +32,10 @@ public:
 	// Blueprint callable method to close the blob
 	UFUNCTION(BlueprintCallable, Category="Blob")
 	void CloseBlob();
+
+	// Subclass of ABubbleBlob
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Blob")
+	TSubclassOf<class ABubbleBlob> BlobClass;
 
 private:
 	// Pointer to the current blob instance

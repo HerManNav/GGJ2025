@@ -35,7 +35,7 @@ private:
 
 	// Bead diameter
 	UPROPERTY(EditAnywhere, Category = "Spline")
-	float BeadDiameter = 30.f;
+	float BeadDiameter = 50.f;
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Spline")

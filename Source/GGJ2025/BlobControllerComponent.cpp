@@ -1,8 +1,8 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #include "BlobControllerComponent.h"
 #include "GameFramework/Actor.h"
 #include "BubbleBlob.h"
 #include "Engine/World.h"
+#include "BubbleGameMode.h"
 
 // Sets default values for this component's properties
 UBlobControllerComponent::UBlobControllerComponent()
@@ -80,7 +80,7 @@ void UBlobControllerComponent::StartBlob()
 		SpawnParams.Owner = BubbleGameMode;
 		SpawnParams.Instigator = GetOwner()->GetInstigator();
 
-		CurrentBlob = World->SpawnActor<ABubbleBlob>(ABubbleBlob::StaticClass(), OwnerLocation, FRotator::ZeroRotator, SpawnParams);
+		CurrentBlob = World->SpawnActor<ABubbleBlob>(BlobClass, OwnerLocation, FRotator::ZeroRotator, SpawnParams);
 		if (CurrentBlob && BubbleGameMode)
 		{
 			BubbleGameMode->RegisterBlob(CurrentBlob);
