@@ -56,6 +56,7 @@ void UBlobControllerComponent::CloseBlob()
 {
 	if (CurrentBlob)
 	{
+		CurrentBlob->CloseBlob();
 		CurrentBlob = nullptr;
 	}
 }

@@ -33,6 +33,10 @@ private:
 	// Index of the second spline point
 	int32 EditableSplinePointIndex;
 
+	// Bead diameter
+	UPROPERTY(EditAnywhere, Category = "Spline")
+	float BeadDiameter = 30.f;
+
 public:
 	UFUNCTION(BlueprintCallable, Category = "Spline")
 	void MoveBlobEnd(const FVector& NewLocation);

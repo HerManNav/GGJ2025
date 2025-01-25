@@ -1,7 +1,8 @@
+
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BubbleBlob.h"
-
+#include "Components/SphereComponent.h"
 #include "Components/SplineComponent.h"
 
 // Sets default values
@@ -20,13 +21,6 @@ ABubbleBlob::ABubbleBlob()
 void ABubbleBlob::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// Create the first spline point at the actor's spawn location
-	//SplineComponent->AddSplineWorldPoint(GetActorLocation());
-
-	// Create the second spline point and store a reference to it
-	//FVector SecondPointLocation = GetActorLocation() + BubbleSpawnEndOffset; // Example offset
-	//SplineComponent->AddSplineWorldPoint(SecondPointLocation);
 	EditableSplinePointIndex = SplineComponent->GetNumberOfSplinePoints() - 1;
 }
 
@@ -58,6 +52,23 @@ void ABubbleBlob::SplitBlob()
 void ABubbleBlob::CloseBlob()
 {
     EditableSplinePointIndex = INDEX_NONE;
+
+    float SplineLength = SplineComponent->GetSplineLength();
+    float Distance = 0.0f;
+
+    while (Distance <= SplineLength)
+    {
+        FVector SplineLocation = SplineComponent->GetLocationAtDistanceAlongSpline(Distance, ESplineCoordinateSpace::World);
+
+        // Create a sphere collision component
+        USphereComponent* SphereComponent = NewObject<USphereComponent>(this);
+        SphereComponent->InitSphereRadius(BeadDiameter / 2.0f);
+        SphereComponent->SetWorldLocation(SplineLocation);
+        SphereComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
+        SphereComponent->RegisterComponent();
+
+        Distance += BeadDiameter;
+    }
 }
 
 // Called every frame
@@ -65,5 +76,3 @@ void ABubbleBlob::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
-
-
