@@ -3,3 +3,12 @@
 
 #include "BubbleGameMode.h"
 
+void ABubbleGameMode::RegisterBlob(ABubbleBlob* Blob)
+{
+    BubbleBlobs.Add(Blob);
+}
+
+TArray<ABubbleBlob*> ABubbleGameMode::GetBubbleBlobs() const
+{
+    return BubbleBlobs;
+}
