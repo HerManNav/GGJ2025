@@ -47,12 +47,12 @@ void UBlobMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		for (auto& Atom : BlobActor->BubbleAtoms)
 		{
 
-
+            float TimeOffset = Atom.RandomTimeOffset + CurrentGameTime;
 			// Calculate shake offset for Z axis
-			float ZOffset = FMath::Sin(CurrentGameTime / ShakePeriod) * ShakeDistance;
+			float ZOffset = FMath::Sin(TimeOffset / ShakePeriod) * ShakeDistance;
 
 			// Calculate shake offset for X axis 
-			float XOffset = FMath::Cos(CurrentGameTime / ShakePeriod) * ShakeDistance;
+			float XOffset = FMath::Cos(TimeOffset / ShakePeriod) * ShakeDistance;
 
 			// Apply the shake offset to the Actor's location
 			FVector Offset = FVector(XOffset, 0.0f, ZOffset);

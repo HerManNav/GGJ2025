@@ -54,6 +54,9 @@ void ABubbleBlob::MakeBubbleAtom()
         NewBubbleAtom.Speed = 0.0f;
         NewBubbleAtom.SplinePointIndex = EditableSplinePointIndex;
 
+        // Assign a random number to RandomTimeOffset property
+        NewBubbleAtom.RandomTimeOffset = FMath::RandRange(0.0f, 1.0f);
+
         FVector BubbleLocation = SplineComponent->GetLocationAtSplinePoint(NewBubbleAtom.SplinePointIndex, ESplineCoordinateSpace::World);
 
         USphereComponent* SphereComponent = NewObject<USphereComponent>(this);

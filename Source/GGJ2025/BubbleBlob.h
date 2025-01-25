@@ -22,6 +22,8 @@ struct FBubbleAtom
 
 	int32 SplinePointIndex = INDEX_NONE;
 
+	float RandomTimeOffset;
+
 	UPROPERTY(Transient)
 	USphereComponent* SphereCollision = nullptr;
 };
