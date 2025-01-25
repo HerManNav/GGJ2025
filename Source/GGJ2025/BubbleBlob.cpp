@@ -44,6 +44,7 @@ void ABubbleBlob::MoveBlobEnd(const FVector& NewLocation)
     }
 }
 
+
 void ABubbleBlob::MakeBubbleAtom()
 {
     if (EditableSplinePointIndex != INDEX_NONE)
@@ -62,6 +63,7 @@ void ABubbleBlob::MakeBubbleAtom()
         SphereComponent->RegisterComponent();
         SphereComponent->SetCollisionProfileName(TEXT("BubbleBlob"));
         SphereComponent->SetGenerateOverlapEvents(true);
+        SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ABubbleBlob::OnBubbleAtomBeginOverlap); // Add callback to begin overlap event
         NewBubbleAtom.SphereCollision = SphereComponent;
 
         BubbleAtoms.Add(NewBubbleAtom);
@@ -69,6 +71,19 @@ void ABubbleBlob::MakeBubbleAtom()
         if (OnBlobAtomCreated.IsBound())
         {
             OnBlobAtomCreated.Broadcast(BubbleLocation);
+        }
+    }
+}
+
+void ABubbleBlob::OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    if (OtherActor && (OtherActor != this) && OtherComp)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Bubble atom overlapped with: %s, Component: %s"), *OtherActor->GetName(), *OtherComp->GetName());
+        CloseBlob();
+        for (FBubbleAtom& BubbleAtom : BubbleAtoms)
+        {
+            BubbleAtom.bMoving = false;
         }
     }
 }
@@ -92,6 +107,11 @@ void ABubbleBlob::SplitBlob()
 
 void ABubbleBlob::CloseBlob()
 {
+    if (EditableSplinePointIndex == INDEX_NONE)
+    {
+        return;
+    }   
+
     MakeBubbleAtom();
 
     EditableSplinePointIndex = INDEX_NONE;

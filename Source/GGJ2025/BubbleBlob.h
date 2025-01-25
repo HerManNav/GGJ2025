@@ -18,6 +18,8 @@ struct FBubbleAtom
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
     float Speed;
 
+	bool bMoving = true;
+
 	int32 SplinePointIndex = INDEX_NONE;
 
 	UPROPERTY(Transient)
@@ -36,6 +38,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline")
 	FVector BubbleSpawnEndOffset = FVector(2.0f, 0.f, 0.f);
 
+
 	// Sets default values for this actor's properties
 	ABubbleBlob();
 
@@ -46,6 +49,11 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	// New event for when a bubble atom begins overlap
+	UFUNCTION(BlueprintCallable, Category = "Bubble")
+	void OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 
 private:
 	// Spline component

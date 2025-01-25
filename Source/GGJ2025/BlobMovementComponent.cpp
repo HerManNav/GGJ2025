@@ -46,6 +46,11 @@ void UBlobMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		// Iterate all blob atoms in BlobActor
 		for (auto& Atom : BlobActor->BubbleAtoms)
 		{
+			if (Atom.bMoving == false)
+			{
+				continue;
+			}
+
 			// Calculate the lifetime of the atom
 			float AtomLifetime = CurrentGameTime - Atom.SpawnTime;
 
