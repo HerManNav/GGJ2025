@@ -14,17 +14,36 @@ void ABubbleBlobTarget::BeginPlay()
 {
     Super::BeginPlay();
     
-    CloseBlob();
+    GenerateSpheres();
 }
 
-void ABubbleBlobTarget::CloseBlob()
+void ABubbleBlobTarget::GenerateSpheres()
 {
     if (false == HasAnyFlags(RF_ClassDefaultObject| RF_ArchetypeObject))
     {
         // destroy all the already generated bubble atoms
         ClearBubbleAtoms();
 
-        Super::CloseBlob();
+        // if spline component is ok re add the sphere components
+        if (ensureAlways(SplineComponent))
+        {
+            float SplineLength = SplineComponent->GetSplineLength();
+            float Distance = 0.0f;
+
+            while (Distance <= SplineLength)
+            {
+                FVector SplineLocation = SplineComponent->GetLocationAtDistanceAlongSpline(Distance, ESplineCoordinateSpace::World);
+
+                // Create a sphere collision component
+                USphereComponent* SphereComponent = NewObject<USphereComponent>(this);
+                SphereComponent->InitSphereRadius(BeadDiameter / 2.0f);
+                SphereComponent->SetWorldLocation(SplineLocation);
+                SphereComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
+                SphereComponent->RegisterComponent();
+
+                Distance += BeadDiameter;
+            }
+        }
 
 #if WITH_EDITOR
         UpdateCollisionsVisibility();
@@ -55,19 +74,19 @@ void ABubbleBlobTarget::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 {
     Super::PostEditChangeProperty(PropertyChangedEvent);
     
-    CloseBlob();
+    GenerateSpheres();
 }
 
 void ABubbleBlobTarget::PostLoad()
 {
     Super::PostLoad();
     
-    CloseBlob();
+    GenerateSpheres();
 }
 
 void ABubbleBlobTarget::OnSplineEdited()
 {
-    CloseBlob();
+    GenerateSpheres();
 }
 
 void ABubbleBlobTarget::UpdateCollisionsVisibility()

@@ -63,13 +63,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	class UBubbleSplineComponent* SplineComponent;
 
-private:
-	// Index of the second spline point
-	int32 EditableSplinePointIndex;
-
 	// Bead diameter
 	UPROPERTY(EditAnywhere, Category = "Spline")
 	float BeadDiameter = 50.f;
+
+private:
+	// Index of the second spline point
+	int32 EditableSplinePointIndex;
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Bubble")
@@ -92,7 +92,7 @@ public:
 	void SplitBlob();
 
 	UFUNCTION(BlueprintCallable, Category = "Spline")
-	virtual void CloseBlob();
+	void CloseBlob();
 
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FBubbleAtom> BubbleAtoms;
