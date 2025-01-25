@@ -1,8 +1,9 @@
 #include "BubbleBlob.h"
 #include "Components/SphereComponent.h"
-#include "Components/SplineComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
+
+PRAGMA_DISABLE_OPTIMIZATION
 
 // Console variable to toggle debug draw for bubble atoms
 static int32 CVarDebugDrawBubbleAtoms = 1;
@@ -20,7 +21,7 @@ ABubbleBlob::ABubbleBlob()
     PrimaryActorTick.bCanEverTick = true;
 
     // Initialize the spline component
-    SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("SplineComponent"));
+    SplineComponent = CreateDefaultSubobject<UBubbleSplineComponent>(TEXT("BubbleSplineComponent"));
     SplineComponent->SetupAttachment(RootComponent);
     SplineComponent->SetDrawDebug(true);
 }
@@ -46,18 +47,21 @@ void ABubbleBlob::MoveBlobEnd(const FVector& NewLocation)
 
 void ABubbleBlob::MakeBubbleAtom()
 {
-    if (EditableSplinePointIndex != INDEX_NONE)
+    if (UWorld* world = GetWorld())
     {
-        FBubbleAtom NewBubbleAtom;
-        NewBubbleAtom.SpawnTime = GetWorld()->GetTimeSeconds();
-        NewBubbleAtom.Speed = 0.0f;
-        NewBubbleAtom.SplinePointIndex = EditableSplinePointIndex;
-        BubbleAtoms.Add(NewBubbleAtom);
-
-        if (OnBlobAtomCreated.IsBound())
+        if (EditableSplinePointIndex != INDEX_NONE)
         {
-            FVector BubbleLocation = SplineComponent->GetLocationAtSplinePoint(NewBubbleAtom.SplinePointIndex, ESplineCoordinateSpace::World);
-            OnBlobAtomCreated.Broadcast(BubbleLocation);
+            FBubbleAtom NewBubbleAtom;
+            NewBubbleAtom.SpawnTime = world->GetTimeSeconds();
+            NewBubbleAtom.Speed = 0.0f;
+            NewBubbleAtom.SplinePointIndex = EditableSplinePointIndex;
+            BubbleAtoms.Add(NewBubbleAtom);
+
+            if (OnBlobAtomCreated.IsBound())
+            {
+                FVector BubbleLocation = SplineComponent->GetLocationAtSplinePoint(NewBubbleAtom.SplinePointIndex, ESplineCoordinateSpace::World);
+                OnBlobAtomCreated.Broadcast(BubbleLocation);
+            }
         }
     }
 }
@@ -81,30 +85,36 @@ void ABubbleBlob::SplitBlob()
 
 void ABubbleBlob::CloseBlob()
 {
-    MakeBubbleAtom();
-
-    EditableSplinePointIndex = INDEX_NONE;
-
-    float SplineLength = SplineComponent->GetSplineLength();
-    float Distance = 0.0f;
-
-    while (Distance <= SplineLength)
+    if (UWorld* world = GetWorld())
     {
-        FVector SplineLocation = SplineComponent->GetLocationAtDistanceAlongSpline(Distance, ESplineCoordinateSpace::World);
+        MakeBubbleAtom();
 
-        // Create a sphere collision component
-        USphereComponent* SphereComponent = NewObject<USphereComponent>(this);
-        SphereComponent->InitSphereRadius(BeadDiameter / 2.0f);
-        SphereComponent->SetWorldLocation(SplineLocation);
-        SphereComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
-        SphereComponent->RegisterComponent();
+        EditableSplinePointIndex = INDEX_NONE;
 
-        Distance += BeadDiameter;
-    }
+        if (ensureAlways(SplineComponent))
+        {
+            float SplineLength = SplineComponent->GetSplineLength();
+            float Distance = 0.0f;
 
-    if (OnBlobClosed.IsBound())
-    {
-        OnBlobClosed.Broadcast();
+            while (Distance <= SplineLength)
+            {
+                FVector SplineLocation = SplineComponent->GetLocationAtDistanceAlongSpline(Distance, ESplineCoordinateSpace::World);
+
+                // Create a sphere collision component
+                USphereComponent* SphereComponent = NewObject<USphereComponent>(this);
+                SphereComponent->InitSphereRadius(BeadDiameter / 2.0f);
+                SphereComponent->SetWorldLocation(SplineLocation);
+                SphereComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
+                SphereComponent->RegisterComponent();
+
+                Distance += BeadDiameter;
+            }
+
+            if (OnBlobClosed.IsBound())
+            {
+                OnBlobClosed.Broadcast();
+            }
+        }
     }
 }
 
@@ -169,3 +179,5 @@ void ABubbleBlob::Tick(float DeltaTime)
         }
     }
 }
+
+PRAGMA_ENABLE_OPTIMIZATION

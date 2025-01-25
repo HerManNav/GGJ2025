@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/SplineComponent.h"
+#include "Components/BubbleSplineComponent.h"
 #include "BubbleBlob.generated.h"
 
 
@@ -43,10 +43,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-private:
+protected:
+
 	// Spline component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	class USplineComponent* SplineComponent;
+	UBubbleSplineComponent* SplineComponent;
+
+private:
 
 	// Index of the second spline point
 	int32 EditableSplinePointIndex;
@@ -73,7 +76,7 @@ public:
 	void SplitBlob();
 
 	UFUNCTION(BlueprintCallable, Category = "Spline")
-	void CloseBlob();
+	virtual void CloseBlob();
 
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FBubbleAtom> BubbleAtoms;
