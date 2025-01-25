@@ -23,7 +23,7 @@ protected:
     virtual void BeginPlay() override;
     
     // overridden to destroy all the already generated bubble atoms
-    virtual void CloseBlob() override;
+    void GenerateSpheres();
 
 private:
 #if WITH_EDITOR
