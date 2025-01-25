@@ -75,12 +75,15 @@ void UBlobMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
                 // Get the location of the atom
                 FVector AtomLocation = CachedSplineComponent->GetLocationAtSplinePoint(Atom.SplinePointIndex, ESplineCoordinateSpace::World);                
-                AtomLocation += Offset;
+                //AtomLocation += Offset;
 				if (Atom.bMoving)
 				{
 					AtomLocation += BubbleFloatDirection * Atom.Speed * DeltaTime;
 				}
-                CachedSplineComponent->SetLocationAtSplinePoint(Atom.SplinePointIndex, AtomLocation, ESplineCoordinateSpace::World);
+
+				auto PrevTangent = CachedSplineComponent->GetTangentAtSplinePoint(Atom.SplinePointIndex, ESplineCoordinateSpace::World);
+				CachedSplineComponent->SetLocationAtSplinePoint(Atom.SplinePointIndex, AtomLocation, ESplineCoordinateSpace::World);
+				CachedSplineComponent->SetTangentAtSplinePoint(Atom.SplinePointIndex, PrevTangent, ESplineCoordinateSpace::World);
 
                 Atom.SphereCollision->SetWorldLocation(AtomLocation);
             }	
