@@ -5,7 +5,7 @@
 #include "Engine/Engine.h"
 
 // Console variable to toggle debug draw for bubble atoms
-static int32 CVarDebugDrawBubbleAtoms = 1;
+static int32 CVarDebugDrawBubbleAtoms = 0;
 FAutoConsoleVariableRef CVarDebugDrawBubbleAtomsRef(
     TEXT("BubbleBlob.DebugDrawBubbleAtoms"),
     CVarDebugDrawBubbleAtoms,
@@ -18,6 +18,9 @@ ABubbleBlob::ABubbleBlob()
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
+
+    // Initialize the root component
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 
     // Initialize the spline component
     SplineComponent = CreateDefaultSubobject<UBubbleSplineComponent>(TEXT("BubbleSplineComponent"));
@@ -83,12 +86,45 @@ void ABubbleBlob::OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedCompon
     if (OtherActor && (OtherActor != this) && OtherComp)
     {
         CloseBlob();
-        
-        for (FBubbleAtom& BubbleAtom : BubbleAtoms)
+        OnBlobStuck.Broadcast();
+        if (false == OtherActor->IsA<ABubbleBlob>())
         {
-            BubbleAtom.bMoving = false;
-            BubbleAtom.SphereCollision->SetGenerateOverlapEvents(false);
+            // Handle overlap with other actors
+            StopAtoms();
+
+            // Iterate linked blobs and set their atoms' bMoving to false
+            for (ABubbleBlob* LinkedBlob : LinkedBlobs)
+            {
+                LinkedBlob->StopAtoms();
+            }
         }
+        else
+        {
+            ABubbleBlob* OtherBubbleBlob = Cast<ABubbleBlob>(OtherActor);
+            if (OtherBubbleBlob)
+            {
+                OtherBubbleBlob->LinkedBlobs.AddUnique(this);
+                LinkedBlobs.AddUnique(OtherBubbleBlob);
+
+                if (bLocked || OtherBubbleBlob->bLocked)
+                {
+                    StopAtoms();
+                    for (ABubbleBlob* LinkedBlob : LinkedBlobs)
+                    {
+                        LinkedBlob->StopAtoms();
+                    }
+                }
+            }
+        }
+    }
+}
+
+void ABubbleBlob::StopAtoms()
+{
+    bLocked = true;
+    for (FBubbleAtom& BubbleAtom : BubbleAtoms)
+    {
+        BubbleAtom.bMoving = false;
     }
 }
 
@@ -188,9 +224,14 @@ void ABubbleBlob::Tick(float DeltaTime)
 
     DrawDebugSphere(GetWorld(), SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World), BeadDiameter / 2.0f, 12, SphereColor, false, -1.0f, 100, 1.0f);
 
-
+    
     if (bFreeSpace)
     {
         SplitBlob();
     }
 }
+
+bool ABubbleBlob::IsBlowing() const
+{
+    return EditableSplinePointIndex != INDEX_NONE;
+}  
