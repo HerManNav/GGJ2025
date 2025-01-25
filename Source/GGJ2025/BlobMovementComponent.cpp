@@ -2,6 +2,7 @@
 
 
 #include "BlobMovementComponent.h"
+#include "Components/SphereComponent.h"
 #include "BubbleBlob.h"
 
 // Sets default values for this component's properties

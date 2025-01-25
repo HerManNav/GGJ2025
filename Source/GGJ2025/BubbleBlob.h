@@ -10,13 +10,13 @@
 USTRUCT(BlueprintType)
 struct FBubbleAtom
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
-    float SpawnTime;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
+	float SpawnTime;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
-    float Speed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
+	float Speed;
 
 	bool bMoving = true;
 
@@ -37,8 +37,8 @@ UCLASS()
 class GGJ2025_API ABubbleBlob : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline")
 	FVector BubbleSpawnEndOffset = FVector(2.0f, 0.f, 0.f);
 
@@ -49,7 +49,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -57,11 +57,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Bubble")
 	void OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-private:
+
+protected:
 	// Spline component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	class USplineComponent* SplineComponent;
+	class UBubbleSplineComponent* SplineComponent;
 
+private:
 	// Index of the second spline point
 	int32 EditableSplinePointIndex;
 
@@ -72,7 +74,7 @@ private:
 public:
 	UFUNCTION(BlueprintCallable, Category = "Bubble")
 	void MakeBubbleAtom();
-	
+
 	UPROPERTY(BlueprintAssignable, Category = "Bubble")
 	FOnBlobAtomCreated OnBlobAtomCreated;
 
@@ -90,7 +92,7 @@ public:
 	void SplitBlob();
 
 	UFUNCTION(BlueprintCallable, Category = "Spline")
-	void CloseBlob();
+	virtual void CloseBlob();
 
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FBubbleAtom> BubbleAtoms;

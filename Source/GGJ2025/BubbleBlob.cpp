@@ -1,6 +1,6 @@
 #include "BubbleBlob.h"
 #include "Components/SphereComponent.h"
-#include "Components/SplineComponent.h"
+#include "Components/BubbleSplineComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
 
@@ -20,7 +20,7 @@ ABubbleBlob::ABubbleBlob()
     PrimaryActorTick.bCanEverTick = true;
 
     // Initialize the spline component
-    SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("SplineComponent"));
+    SplineComponent = CreateDefaultSubobject<UBubbleSplineComponent>(TEXT("BubbleSplineComponent"));
     SplineComponent->SetupAttachment(RootComponent);
     SplineComponent->SetDrawDebug(true);
 }
@@ -168,7 +168,7 @@ void ABubbleBlob::Tick(float DeltaTime)
     );
 
     // Draw a sphere indicating whether overlapping hit something or not
-    FColor SphereColor =  FColor::Blue;
+    FColor SphereColor = FColor::Blue;
 
     if (bIsOverlapping)
     {
@@ -189,8 +189,8 @@ void ABubbleBlob::Tick(float DeltaTime)
 
     
     if (bFreeSpace)
-    {   
-       SplitBlob();
+    {
+        SplitBlob();
     }
 }
 
