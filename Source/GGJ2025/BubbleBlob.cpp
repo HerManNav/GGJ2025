@@ -87,6 +87,7 @@ void ABubbleBlob::OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedCompon
         for (FBubbleAtom& BubbleAtom : BubbleAtoms)
         {
             BubbleAtom.bMoving = false;
+            BubbleAtom.SphereCollision->SetGenerateOverlapEvents(false);
         }
     }
 }
@@ -110,7 +111,10 @@ void ABubbleBlob::SplitBlob()
 
 void ABubbleBlob::CloseBlob()
 {
+    MakeBubbleAtom();
     EditableSplinePointIndex = INDEX_NONE;
+
+
 
     if (OnBlobClosed.IsBound())
     {
