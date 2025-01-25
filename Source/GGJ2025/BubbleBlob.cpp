@@ -5,6 +5,10 @@
 #include "Components/SphereComponent.h"
 #include "Components/SplineComponent.h"
 
+#include "DrawDebugHelpers.h"
+
+
+
 // Sets default values
 ABubbleBlob::ABubbleBlob()
 {
@@ -21,6 +25,9 @@ ABubbleBlob::ABubbleBlob()
 void ABubbleBlob::BeginPlay()
 {
 	Super::BeginPlay();
+    EditableSplinePointIndex = 0;
+    MakeBubbleAtom();
+
 	EditableSplinePointIndex = SplineComponent->GetNumberOfSplinePoints() - 1;
 }
 
@@ -33,9 +40,29 @@ void ABubbleBlob::MoveBlobEnd(const FVector& NewLocation)
 	}
 }
 
+void ABubbleBlob::MakeBubbleAtom()
+{
+    if (EditableSplinePointIndex != INDEX_NONE)
+    {
+        FBubbleAtom NewBubbleAtom;
+        NewBubbleAtom.SpawnTime = GetWorld()->GetTimeSeconds();
+        NewBubbleAtom.Speed = 0.0f;
+        NewBubbleAtom.SplinePointIndex = EditableSplinePointIndex;
+        BubbleAtoms.Add(NewBubbleAtom);
+
+        if (OnBlobAtomCreated.IsBound())
+        {
+            FVector BubbleLocation = SplineComponent->GetLocationAtSplinePoint(NewBubbleAtom.SplinePointIndex, ESplineCoordinateSpace::World);
+            OnBlobAtomCreated.Broadcast(BubbleLocation);
+        }
+    }
+}
+
 
 void ABubbleBlob::SplitBlob()
 {
+    MakeBubbleAtom();
+
     if (EditableSplinePointIndex != INDEX_NONE)
     {
         // Get the location of the existing editable spline point
@@ -51,6 +78,8 @@ void ABubbleBlob::SplitBlob()
 
 void ABubbleBlob::CloseBlob()
 {
+    MakeBubbleAtom();
+
     EditableSplinePointIndex = INDEX_NONE;
 
     float SplineLength = SplineComponent->GetSplineLength();
@@ -69,10 +98,31 @@ void ABubbleBlob::CloseBlob()
 
         Distance += BeadDiameter;
     }
+
+    if (OnBlobClosed.IsBound())
+    {
+        OnBlobClosed.Broadcast();
+    }
 }
 
-// Called every frame
 void ABubbleBlob::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
+
+    for (const FBubbleAtom& BubbleAtom : BubbleAtoms)
+    {
+        if (BubbleAtom.SplinePointIndex != INDEX_NONE)
+        {
+            FVector BubbleLocation = SplineComponent->GetLocationAtSplinePoint(BubbleAtom.SplinePointIndex, ESplineCoordinateSpace::World);
+            DrawDebugSphere(GetWorld(), BubbleLocation, BeadDiameter / 2.0f, 12, FColor::Green, false, -1.0f, 0, 1.0f);
+            DrawDebugString(GetWorld(), BubbleLocation, FString::FromInt(BubbleAtom.SplinePointIndex), nullptr, FColor::White, DeltaTime, false);
+        }
+    }
+
+    if (EditableSplinePointIndex != INDEX_NONE)
+    {
+        FVector EditablePointLocation = SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World);
+        DrawDebugSphere(GetWorld(), EditablePointLocation, BeadDiameter / 2.0f, 12, FColor::Red, false, -1.0f, 0, 1.0f);
+        DrawDebugString(GetWorld(), EditablePointLocation, FString::FromInt(EditableSplinePointIndex), nullptr, FColor::White, DeltaTime, false);
+    }
 }

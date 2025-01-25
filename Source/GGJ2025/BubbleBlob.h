@@ -5,6 +5,24 @@
 #include "Components/SplineComponent.h"
 #include "BubbleBlob.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct FBubbleAtom
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
+    float SpawnTime;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
+    float Speed;
+
+	int32 SplinePointIndex = INDEX_NONE;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlobClosed);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobAtomCreated, const FVector&, BubbleAtomLocation);
+
 UCLASS()
 class GGJ2025_API ABubbleBlob : public AActor
 {
@@ -38,6 +56,16 @@ private:
 	float BeadDiameter = 50.f;
 
 public:
+	UFUNCTION(BlueprintCallable, Category = "Bubble")
+	void MakeBubbleAtom();
+	
+	UPROPERTY(BlueprintAssignable, Category = "Bubble")
+	FOnBlobAtomCreated OnBlobAtomCreated;
+
+	UPROPERTY(BlueprintAssignable, Category = "Bubble")
+	FOnBlobClosed OnBlobClosed;
+
+public:
 	UFUNCTION(BlueprintCallable, Category = "Spline")
 	void MoveBlobEnd(const FVector& NewLocation);
 
@@ -46,4 +74,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Spline")
 	void CloseBlob();
+
+	UPROPERTY(BlueprintReadOnly)
+	TArray<FBubbleAtom> BubbleAtoms;
 };
