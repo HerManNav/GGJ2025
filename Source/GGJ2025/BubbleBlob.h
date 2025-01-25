@@ -65,7 +65,7 @@ protected:
 
 	// Bead diameter
 	UPROPERTY(EditAnywhere, Category = "Spline")
-	float BeadDiameter = 50.f;
+	float BeadDiameter = 100.f;
 
 private:
 	// Index of the second spline point
@@ -99,4 +99,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Bubble")
 	bool IsBlowing() const;
+
+	UPROPERTY(Transient)
+	TArray<ABubbleBlob*> LinkedBlobs;
 };

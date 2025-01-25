@@ -19,6 +19,9 @@ ABubbleBlob::ABubbleBlob()
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
 
+    // Initialize the root component
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+
     // Initialize the spline component
     SplineComponent = CreateDefaultSubobject<UBubbleSplineComponent>(TEXT("BubbleSplineComponent"));
     SplineComponent->SetupAttachment(RootComponent);
@@ -84,9 +87,32 @@ void ABubbleBlob::OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedCompon
     {
         CloseBlob();
         OnBlobStuck.Broadcast();
-        for (FBubbleAtom& BubbleAtom : BubbleAtoms)
+        if (false == OtherActor->IsA<ABubbleBlob>())
         {
-            BubbleAtom.bMoving = false;
+            // Handle overlap with other actors
+            
+            for (FBubbleAtom& BubbleAtom : BubbleAtoms)
+            {
+                BubbleAtom.bMoving = false;
+            }
+
+            // Iterate linked blobs and set their atoms' bMoving to false
+            for (ABubbleBlob* LinkedBlob : LinkedBlobs)
+            {
+                for (FBubbleAtom& LinkedBubbleAtom : LinkedBlob->BubbleAtoms)
+                {
+                    LinkedBubbleAtom.bMoving = false;
+                }
+            }
+        }
+        else
+        {
+            ABubbleBlob* OtherBubbleBlob = Cast<ABubbleBlob>(OtherActor);
+            if (OtherBubbleBlob)
+            {
+                OtherBubbleBlob->LinkedBlobs.AddUnique(this);
+                LinkedBlobs.AddUnique(OtherBubbleBlob);
+            }
         }
     }
 }
