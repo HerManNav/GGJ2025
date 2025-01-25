@@ -82,12 +82,11 @@ void ABubbleBlob::OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedCompon
 {
     if (OtherActor && (OtherActor != this) && OtherComp)
     {
-        UE_LOG(LogTemp, Log, TEXT("Bubble atom overlapped with: %s, Component: %s"), *OtherActor->GetName(), *OtherComp->GetName());
         CloseBlob();
+        OnBlobStuck.Broadcast();
         for (FBubbleAtom& BubbleAtom : BubbleAtoms)
         {
             BubbleAtom.bMoving = false;
-            BubbleAtom.SphereCollision->SetGenerateOverlapEvents(false);
         }
     }
 }
@@ -133,14 +132,14 @@ void ABubbleBlob::Tick(float DeltaTime)
             if (BubbleAtom.SplinePointIndex != INDEX_NONE)
             {
                 FVector BubbleLocation = SplineComponent->GetLocationAtSplinePoint(BubbleAtom.SplinePointIndex, ESplineCoordinateSpace::World);
-                DrawDebugSphere(GetWorld(), BubbleLocation, BeadDiameter / 2.0f, 12, FColor::Green, false, -1.0f, 0, 1.0f);
+                DrawDebugSphere(GetWorld(), BubbleLocation, BeadDiameter / 2.0f, 12, FColor::Green, false, -1.0f, 100, 1.0f);
                 DrawDebugString(GetWorld(), BubbleLocation, FString::FromInt(BubbleAtom.SplinePointIndex), nullptr, FColor::White, DeltaTime, false);
             }
         }
 
         if (EditableSplinePointIndex != INDEX_NONE)
         {
-            DrawDebugSphere(GetWorld(), SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World), BeadDiameter / 2.0f, 12, FColor::Red, false, -1.0f, 0, 1.0f);
+            DrawDebugSphere(GetWorld(), SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World), BeadDiameter / 2.0f, 12, FColor::Red, false, -1.0f, 100, 1.0f);
             DrawDebugString(GetWorld(), SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World), FString::FromInt(EditableSplinePointIndex), nullptr, FColor::White, DeltaTime, false);
         }
     }
@@ -189,12 +188,13 @@ void ABubbleBlob::Tick(float DeltaTime)
     DrawDebugSphere(GetWorld(), SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World), BeadDiameter / 2.0f, 12, SphereColor, false, -1.0f, 100, 1.0f);
 
     
-
     if (bFreeSpace)
     {   
        SplitBlob();
     }
-
-
 }
 
+bool ABubbleBlob::IsBlowing() const
+{
+    return EditableSplinePointIndex != INDEX_NONE;
+}  
