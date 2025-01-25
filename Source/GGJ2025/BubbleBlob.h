@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/SplineComponent.h"
+#include "Components/SphereComponent.h"
 #include "BubbleBlob.generated.h"
 
 
@@ -18,6 +19,9 @@ struct FBubbleAtom
     float Speed;
 
 	int32 SplinePointIndex = INDEX_NONE;
+
+	UPROPERTY(Transient)
+	USphereComponent* SphereCollision = nullptr;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlobClosed);
