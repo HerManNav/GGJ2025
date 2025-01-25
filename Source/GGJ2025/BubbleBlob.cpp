@@ -87,6 +87,7 @@ void ABubbleBlob::OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedCompon
         for (FBubbleAtom& BubbleAtom : BubbleAtoms)
         {
             BubbleAtom.bMoving = false;
+            BubbleAtom.SphereCollision->SetGenerateOverlapEvents(false);
         }
     }
 }
