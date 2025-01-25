@@ -1,17 +1,40 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BubbleBlob.h"
+#include "GameFramework/Actor.h"
 #include "BubbleBlobTarget.generated.h"
 
+USTRUCT(BlueprintType)
+struct FBubbleTargetData
+{
+    GENERATED_BODY()
+
+    UPROPERTY(Transient)
+    TObjectPtr<class USphereComponent> SphereCollision;
+
+    UPROPERTY(Transient)
+    TArray<TObjectPtr<USphereComponent>> PotentialCollisions;
+};
+
 UCLASS()
-class GGJ2025_API ABubbleBlobTarget : public ABubbleBlob
+class GGJ2025_API ABubbleBlobTarget : public AActor
 {
     GENERATED_BODY()
 
     ABubbleBlobTarget();
 
 public:
+
+    // New event for when a bubble atom begins overlap
+    UFUNCTION(BlueprintCallable, Category = "Bubble")
+    void OnBubbleBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+    // New event for when a bubble atom begins overlap
+    UFUNCTION(BlueprintCallable, Category = "Bubble")
+    void OnBubbleEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+    // Called every frame
+    virtual void Tick(float DeltaTime) override;
 
 #if WITH_EDITOR
     virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -23,13 +46,31 @@ protected:
     virtual void BeginPlay() override;
     
     // overridden to destroy all the already generated bubble atoms
-    void GenerateSpheres();
+    void GenerateData();
 
 private:
 #if WITH_EDITOR
     void OnSplineEdited();
-    void UpdateCollisionsVisibility();
 #endif
 
     void ClearBubbleAtoms();
+
+private:
+
+    // Spline component
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+    class UBubbleSplineComponent* SplineComponent;
+    
+    UPROPERTY()
+    TArray<TObjectPtr<class ABubbleBlob>> CachedBubbles;
+
+    UPROPERTY()
+    TArray<TObjectPtr<class USphereComponent>> CachedSphereComponents;
+
+    UPROPERTY()
+    TArray<FBubbleTargetData> BubbleTargetDatas;
+
+    // Bead diameter
+    UPROPERTY(EditAnywhere, Category = "Spline")
+    float BeadDiameter = 50.f;
 };

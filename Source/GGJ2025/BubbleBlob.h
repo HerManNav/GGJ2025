@@ -57,7 +57,7 @@ public:
 	void OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 
-protected:
+private:
 	// Spline component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	class UBubbleSplineComponent* SplineComponent;
@@ -66,7 +66,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Spline")
 	float BeadDiameter = 50.f;
 
-private:
 	// Index of the second spline point
 	int32 EditableSplinePointIndex;
 

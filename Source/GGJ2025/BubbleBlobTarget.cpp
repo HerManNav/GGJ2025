@@ -1,12 +1,20 @@
 #include "BubbleBlobTarget.h"
 #include "Components/BubbleSplineComponent.h"
 #include "Components/SphereComponent.h"
+#include "BubbleBlob.h"
 
 
-PRAGMA_DISABLE_OPTIMIZATION
 
 ABubbleBlobTarget::ABubbleBlobTarget()
 {
+    // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+    PrimaryActorTick.bCanEverTick = true;
+
+    // Initialize the spline component
+    SplineComponent = CreateDefaultSubobject<UBubbleSplineComponent>(TEXT("BubbleSplineComponent"));
+    SplineComponent->SetupAttachment(RootComponent);
+    SplineComponent->SetDrawDebug(true);
+
     SplineComponent->OnSplineEdited = FSimpleDelegate::CreateUObject(this, &ThisClass::OnSplineEdited);
 }
 
@@ -14,10 +22,29 @@ void ABubbleBlobTarget::BeginPlay()
 {
     Super::BeginPlay();
     
-    GenerateSpheres();
+    GenerateData();
 }
 
-void ABubbleBlobTarget::GenerateSpheres()
+void ABubbleBlobTarget::OnBubbleBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    if (ABubbleBlob* otherBubble = Cast<ABubbleBlob>(OtherActor))
+    {
+    }
+}
+
+void ABubbleBlobTarget::OnBubbleEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+    if (ABubbleBlob* otherBubble = Cast<ABubbleBlob>(OtherActor))
+    {
+    }
+}
+
+void ABubbleBlobTarget::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+}
+
+void ABubbleBlobTarget::GenerateData()
 {
     if (false == HasAnyFlags(RF_ClassDefaultObject| RF_ArchetypeObject))
     {
@@ -32,41 +59,39 @@ void ABubbleBlobTarget::GenerateSpheres()
 
             while (Distance <= SplineLength)
             {
+                BubbleTargetDatas.Add(FBubbleTargetData());
+                FBubbleTargetData& bubbleTargetData = BubbleTargetDatas.Last();
+
                 FVector SplineLocation = SplineComponent->GetLocationAtDistanceAlongSpline(Distance, ESplineCoordinateSpace::World);
 
                 // Create a sphere collision component
-                USphereComponent* SphereComponent = NewObject<USphereComponent>(this);
-                SphereComponent->InitSphereRadius(BeadDiameter / 2.0f);
-                SphereComponent->SetWorldLocation(SplineLocation);
-                SphereComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
-                SphereComponent->RegisterComponent();
+                bubbleTargetData.SphereCollision = NewObject<USphereComponent>(this);
+
+                bubbleTargetData.SphereCollision->InitSphereRadius(BeadDiameter / 2.0f);
+                bubbleTargetData.SphereCollision->SetWorldLocation(SplineLocation);
+                bubbleTargetData.SphereCollision->SetHiddenInGame(false);
+                bubbleTargetData.SphereCollision->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
+                bubbleTargetData.SphereCollision->RegisterComponent();
 
                 Distance += BeadDiameter;
             }
         }
-
-#if WITH_EDITOR
-        UpdateCollisionsVisibility();
-#endif
     }
 }
 
 void ABubbleBlobTarget::ClearBubbleAtoms()
 {
-    // Iterate through all components of the actor
-    TArray<UActorComponent*> Components = K2_GetComponentsByClass(USphereComponent::StaticClass());
-
-    for (UActorComponent* Component : Components)
+    for (FBubbleTargetData& bubbleTargetData : BubbleTargetDatas)
     {
-        // Check if the component is a primitive component
-        if (USphereComponent* SphereComponent = Cast<USphereComponent>(Component))
+        if (::IsValid(bubbleTargetData.SphereCollision))
         {
-            // Destroy all existing sphere component
-            SphereComponent->DestroyComponent();
+            bubbleTargetData.SphereCollision->DestroyComponent();
         }
+
+        bubbleTargetData.PotentialCollisions.Empty();
     }
 
-    BubbleAtoms.Empty();
+    BubbleTargetDatas.Empty();
 }
 
 #if WITH_EDITOR
@@ -74,38 +99,19 @@ void ABubbleBlobTarget::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 {
     Super::PostEditChangeProperty(PropertyChangedEvent);
     
-    GenerateSpheres();
+    GenerateData();
 }
 
 void ABubbleBlobTarget::PostLoad()
 {
     Super::PostLoad();
     
-    GenerateSpheres();
+    GenerateData();
 }
 
 void ABubbleBlobTarget::OnSplineEdited()
 {
-    GenerateSpheres();
-}
-
-void ABubbleBlobTarget::UpdateCollisionsVisibility()
-{
-    // Iterate through all components of the actor
-    TArray<UActorComponent*> Components = K2_GetComponentsByClass(USphereComponent::StaticClass());
-    
-    for (UActorComponent* Component : Components)
-    {
-        // Check if the component is a primitive component
-        if (USphereComponent* SphereComponent = Cast<USphereComponent>(Component))
-        {
-            // Set visibility
-            SphereComponent->SetVisibility(true);
-        }
-    }
+    GenerateData();
 }
 
 #endif // WITH_EDITOR
-
-
-PRAGMA_ENABLE_OPTIMIZATION
