@@ -2,22 +2,30 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/BubbleSplineComponent.h"
+#include "Components/SplineComponent.h"
+#include "Components/SphereComponent.h"
 #include "BubbleBlob.generated.h"
 
 
 USTRUCT(BlueprintType)
 struct FBubbleAtom
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
-    float SpawnTime;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
+	float SpawnTime;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
-    float Speed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
+	float Speed;
+
+	bool bMoving = true;
 
 	int32 SplinePointIndex = INDEX_NONE;
+
+	float RandomTimeOffset;
+
+	UPROPERTY(Transient)
+	USphereComponent* SphereCollision = nullptr;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlobClosed);
@@ -27,10 +35,11 @@ UCLASS()
 class GGJ2025_API ABubbleBlob : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spline")
 	FVector BubbleSpawnEndOffset = FVector(2.0f, 0.f, 0.f);
+
 
 	// Sets default values for this actor's properties
 	ABubbleBlob();
@@ -39,18 +48,21 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-protected:
+	// New event for when a bubble atom begins overlap
+	UFUNCTION(BlueprintCallable, Category = "Bubble")
+	void OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+
+protected:
 	// Spline component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UBubbleSplineComponent* SplineComponent;
+	class UBubbleSplineComponent* SplineComponent;
 
 private:
-
 	// Index of the second spline point
 	int32 EditableSplinePointIndex;
 
@@ -61,7 +73,7 @@ private:
 public:
 	UFUNCTION(BlueprintCallable, Category = "Bubble")
 	void MakeBubbleAtom();
-	
+
 	UPROPERTY(BlueprintAssignable, Category = "Bubble")
 	FOnBlobAtomCreated OnBlobAtomCreated;
 

@@ -1,9 +1,8 @@
 #include "BubbleBlob.h"
 #include "Components/SphereComponent.h"
+#include "Components/BubbleSplineComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
-
-PRAGMA_DISABLE_OPTIMIZATION
 
 // Console variable to toggle debug draw for bubble atoms
 static int32 CVarDebugDrawBubbleAtoms = 1;
@@ -45,23 +44,49 @@ void ABubbleBlob::MoveBlobEnd(const FVector& NewLocation)
     }
 }
 
+
 void ABubbleBlob::MakeBubbleAtom()
 {
-    if (UWorld* world = GetWorld())
+    if (EditableSplinePointIndex != INDEX_NONE)
     {
-        if (EditableSplinePointIndex != INDEX_NONE)
-        {
-            FBubbleAtom NewBubbleAtom;
-            NewBubbleAtom.SpawnTime = world->GetTimeSeconds();
-            NewBubbleAtom.Speed = 0.0f;
-            NewBubbleAtom.SplinePointIndex = EditableSplinePointIndex;
-            BubbleAtoms.Add(NewBubbleAtom);
+        FBubbleAtom NewBubbleAtom;
+        NewBubbleAtom.SpawnTime = GetWorld()->GetTimeSeconds();
+        NewBubbleAtom.Speed = 0.0f;
+        NewBubbleAtom.SplinePointIndex = EditableSplinePointIndex;
 
-            if (OnBlobAtomCreated.IsBound())
-            {
-                FVector BubbleLocation = SplineComponent->GetLocationAtSplinePoint(NewBubbleAtom.SplinePointIndex, ESplineCoordinateSpace::World);
-                OnBlobAtomCreated.Broadcast(BubbleLocation);
-            }
+        // Assign a random number to RandomTimeOffset property
+        NewBubbleAtom.RandomTimeOffset = FMath::RandRange(0.0f, 1.0f);
+
+        FVector BubbleLocation = SplineComponent->GetLocationAtSplinePoint(NewBubbleAtom.SplinePointIndex, ESplineCoordinateSpace::World);
+
+        USphereComponent* SphereComponent = NewObject<USphereComponent>(this);
+        SphereComponent->InitSphereRadius(BeadDiameter / 2.0f);
+        SphereComponent->SetWorldLocation(BubbleLocation);
+        SphereComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
+        SphereComponent->RegisterComponent();
+        SphereComponent->SetCollisionProfileName(TEXT("BubbleBlob"));
+        SphereComponent->SetGenerateOverlapEvents(true);
+        SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ABubbleBlob::OnBubbleAtomBeginOverlap); // Add callback to begin overlap event
+        NewBubbleAtom.SphereCollision = SphereComponent;
+
+        BubbleAtoms.Add(NewBubbleAtom);
+
+        if (OnBlobAtomCreated.IsBound())
+        {
+            OnBlobAtomCreated.Broadcast(BubbleLocation);
+        }
+    }
+}
+
+void ABubbleBlob::OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    if (OtherActor && (OtherActor != this) && OtherComp)
+    {
+        CloseBlob();
+        
+        for (FBubbleAtom& BubbleAtom : BubbleAtoms)
+        {
+            BubbleAtom.bMoving = false;
         }
     }
 }
@@ -85,79 +110,20 @@ void ABubbleBlob::SplitBlob()
 
 void ABubbleBlob::CloseBlob()
 {
-    if (UWorld* world = GetWorld())
+    MakeBubbleAtom();
+    EditableSplinePointIndex = INDEX_NONE;
+
+
+
+    if (OnBlobClosed.IsBound())
     {
-        MakeBubbleAtom();
-
-        EditableSplinePointIndex = INDEX_NONE;
-
-        if (ensureAlways(SplineComponent))
-        {
-            float SplineLength = SplineComponent->GetSplineLength();
-            float Distance = 0.0f;
-
-            while (Distance <= SplineLength)
-            {
-                FVector SplineLocation = SplineComponent->GetLocationAtDistanceAlongSpline(Distance, ESplineCoordinateSpace::World);
-
-                // Create a sphere collision component
-                USphereComponent* SphereComponent = NewObject<USphereComponent>(this);
-                SphereComponent->InitSphereRadius(BeadDiameter / 2.0f);
-                SphereComponent->SetWorldLocation(SplineLocation);
-                SphereComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
-                SphereComponent->RegisterComponent();
-
-                Distance += BeadDiameter;
-            }
-
-            if (OnBlobClosed.IsBound())
-            {
-                OnBlobClosed.Broadcast();
-            }
-        }
+        OnBlobClosed.Broadcast();
     }
 }
 
 void ABubbleBlob::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
-    //bool bFreeSpace = true;
-
-    //if (EditableSplinePointIndex != INDEX_NONE)
-    //{
-    //    FVector EditablePointLocation = SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World);
-    //    TArray<FOverlapResult> OverlapResults;
-    //    FCollisionShape SphereShape = FCollisionShape::MakeSphere(BeadDiameter / 2.0f);
-    //    FCollisionQueryParams QueryParams;
-
-    //    bool bIsOverlapping = GetWorld()->OverlapMultiByChannel(
-    //        OverlapResults,
-    //        EditablePointLocation,
-    //        FQuat::Identity,
-    //        ECC_WorldDynamic,
-    //        SphereShape,
-    //        QueryParams
-    //    );
-
-    //    if (bIsOverlapping)
-    //    {
-    //        for (const FOverlapResult& Result : OverlapResults)
-    //        {
-    //            if (Result.GetComponent()->IsA<USphereComponent>() && Result.GetComponent()->GetOwner() == this)
-    //            {
-    //                // Handle overlap with other sphere components belonging to this actor
-    //                bFreeSpace = false;
-    //                break;
-    //            }
-    //        }
-    //    }
-    //}
-
-    //if (bFreeSpace)
-    //{   
-    //    SplitBlob();
-    //}
 
     if (CVarDebugDrawBubbleAtoms)
     {
@@ -166,18 +132,64 @@ void ABubbleBlob::Tick(float DeltaTime)
             if (BubbleAtom.SplinePointIndex != INDEX_NONE)
             {
                 FVector BubbleLocation = SplineComponent->GetLocationAtSplinePoint(BubbleAtom.SplinePointIndex, ESplineCoordinateSpace::World);
-                DrawDebugSphere(GetWorld(), BubbleLocation, BeadDiameter / 2.0f, 12, FColor::Green, false, -1.0f, 0, 1.0f);
+                DrawDebugSphere(GetWorld(), BubbleLocation, BeadDiameter / 2.0f, 12, FColor::Green, false, -1.0f, 100, 1.0f);
                 DrawDebugString(GetWorld(), BubbleLocation, FString::FromInt(BubbleAtom.SplinePointIndex), nullptr, FColor::White, DeltaTime, false);
             }
         }
 
         if (EditableSplinePointIndex != INDEX_NONE)
         {
-            FVector EditablePointLocation = SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World);
-            DrawDebugSphere(GetWorld(), EditablePointLocation, BeadDiameter / 2.0f, 12, FColor::Red, false, -1.0f, 0, 1.0f);
-            DrawDebugString(GetWorld(), EditablePointLocation, FString::FromInt(EditableSplinePointIndex), nullptr, FColor::White, DeltaTime, false);
+            DrawDebugSphere(GetWorld(), SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World), BeadDiameter / 2.0f, 12, FColor::Red, false, -1.0f, 100, 1.0f);
+            DrawDebugString(GetWorld(), SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World), FString::FromInt(EditableSplinePointIndex), nullptr, FColor::White, DeltaTime, false);
         }
     }
-}
 
-PRAGMA_ENABLE_OPTIMIZATION
+    if (EditableSplinePointIndex == INDEX_NONE)
+    {
+        return;
+    }
+
+    bool bFreeSpace = true;
+
+    TArray<FOverlapResult> OverlapResults;
+    FCollisionShape SphereShape = FCollisionShape::MakeSphere(BeadDiameter / 2.0f);
+    FCollisionQueryParams QueryParams;
+    QueryParams.bFindInitialOverlaps = true;
+
+
+    bool bIsOverlapping = GetWorld()->OverlapMultiByChannel(
+        OverlapResults,
+        SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World),
+        FQuat::Identity,
+        //ECC_GameTraceChannel1,
+        ECC_WorldDynamic,
+        SphereShape,
+        QueryParams
+    );
+
+    // Draw a sphere indicating whether overlapping hit something or not
+    FColor SphereColor = FColor::Blue;
+
+    if (bIsOverlapping)
+    {
+        for (const FOverlapResult& Result : OverlapResults)
+        {
+
+            if (Result.GetComponent()->IsA<USphereComponent>() && Result.GetComponent()->GetOwner() == this)
+            {
+                // Handle overlap with other sphere components belonging to this actor
+                bFreeSpace = false;
+                SphereColor = FColor::Yellow;
+                break;
+            }
+        }
+    }
+
+    DrawDebugSphere(GetWorld(), SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World), BeadDiameter / 2.0f, 12, SphereColor, false, -1.0f, 100, 1.0f);
+
+
+    if (bFreeSpace)
+    {
+        SplitBlob();
+    }
+}

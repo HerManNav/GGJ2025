@@ -40,4 +40,11 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector BubbleFloatDirection = FVector::UpVector;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float ShakePeriod = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float ShakeDistance = 10.f;
 };

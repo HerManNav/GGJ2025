@@ -19,14 +19,17 @@ void ABubbleBlobTarget::BeginPlay()
 
 void ABubbleBlobTarget::CloseBlob()
 {
-    // destroy all the already generated bubble atoms
-    ClearBubbleAtoms();
+    if (false == HasAnyFlags(RF_ClassDefaultObject| RF_ArchetypeObject))
+    {
+        // destroy all the already generated bubble atoms
+        ClearBubbleAtoms();
 
-    Super::CloseBlob();
+        Super::CloseBlob();
 
 #if WITH_EDITOR
-    UpdateCollisionsVisibility();
+        UpdateCollisionsVisibility();
 #endif
+    }
 }
 
 void ABubbleBlobTarget::ClearBubbleAtoms()
@@ -84,5 +87,6 @@ void ABubbleBlobTarget::UpdateCollisionsVisibility()
 }
 
 #endif // WITH_EDITOR
+
 
 PRAGMA_ENABLE_OPTIMIZATION
