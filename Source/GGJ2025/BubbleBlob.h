@@ -57,6 +57,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Bubble")
 	void OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	void StopAtoms();
 
 protected:
 	// Spline component
@@ -102,4 +103,6 @@ public:
 
 	UPROPERTY(Transient)
 	TArray<ABubbleBlob*> LinkedBlobs;
+
+	bool bLocked = false;
 };

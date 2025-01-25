@@ -5,7 +5,7 @@
 #include "Engine/Engine.h"
 
 // Console variable to toggle debug draw for bubble atoms
-static int32 CVarDebugDrawBubbleAtoms = 1;
+static int32 CVarDebugDrawBubbleAtoms = 0;
 FAutoConsoleVariableRef CVarDebugDrawBubbleAtomsRef(
     TEXT("BubbleBlob.DebugDrawBubbleAtoms"),
     CVarDebugDrawBubbleAtoms,
@@ -90,19 +90,12 @@ void ABubbleBlob::OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedCompon
         if (false == OtherActor->IsA<ABubbleBlob>())
         {
             // Handle overlap with other actors
-            
-            for (FBubbleAtom& BubbleAtom : BubbleAtoms)
-            {
-                BubbleAtom.bMoving = false;
-            }
+            StopAtoms();
 
             // Iterate linked blobs and set their atoms' bMoving to false
             for (ABubbleBlob* LinkedBlob : LinkedBlobs)
             {
-                for (FBubbleAtom& LinkedBubbleAtom : LinkedBlob->BubbleAtoms)
-                {
-                    LinkedBubbleAtom.bMoving = false;
-                }
+                LinkedBlob->StopAtoms();
             }
         }
         else
@@ -112,8 +105,26 @@ void ABubbleBlob::OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedCompon
             {
                 OtherBubbleBlob->LinkedBlobs.AddUnique(this);
                 LinkedBlobs.AddUnique(OtherBubbleBlob);
+
+                if (bLocked || OtherBubbleBlob->bLocked)
+                {
+                    StopAtoms();
+                    for (ABubbleBlob* LinkedBlob : LinkedBlobs)
+                    {
+                        LinkedBlob->StopAtoms();
+                    }
+                }
             }
         }
+    }
+}
+
+void ABubbleBlob::StopAtoms()
+{
+    bLocked = true;
+    for (FBubbleAtom& BubbleAtom : BubbleAtoms)
+    {
+        BubbleAtom.bMoving = false;
     }
 }
 
