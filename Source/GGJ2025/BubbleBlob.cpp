@@ -92,7 +92,10 @@ void ABubbleBlob::OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedCompon
         }
 
         CloseBlob();
-        OnBlobStuck.Broadcast();
+        if (false == bLocked)
+        {
+            OnBlobStuck.Broadcast();
+        }
         if (false == OtherActor->IsA<ABubbleBlob>())
         {
             // Handle overlap with other actors
@@ -153,15 +156,16 @@ void ABubbleBlob::SplitBlob()
 
 void ABubbleBlob::CloseBlob()
 {
-    MakeBubbleAtom();
-    EditableSplinePointIndex = INDEX_NONE;
-
-
-
-    if (OnBlobClosed.IsBound())
+    if (EditableSplinePointIndex != INDEX_NONE)
     {
-        OnBlobClosed.Broadcast();
+        MakeBubbleAtom();
+        EditableSplinePointIndex = INDEX_NONE;
+        if (OnBlobClosed.IsBound())
+        {
+            OnBlobClosed.Broadcast();
+        }
     }
+    
 }
 
 void ABubbleBlob::Tick(float DeltaTime)
