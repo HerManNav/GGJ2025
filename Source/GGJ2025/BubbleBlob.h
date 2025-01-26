@@ -24,6 +24,8 @@ struct FBubbleAtom
 
 	float RandomTimeOffset;
 
+	float LockedInTime;
+
 	UPROPERTY(Transient)
 	USphereComponent* SphereCollision = nullptr;
 };
@@ -32,6 +34,19 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlobClosed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobAtomCreated, const FVector&, BubbleAtomLocation);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlobStuck);
 
+USTRUCT(BlueprintType)
+struct FBubbleEvaluation
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
+	USphereComponent* AtomSphere;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
+	bool bIsGood;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobEvaluation, TArray<FBubbleEvaluation>, BubbleEvaluation);
 
 UCLASS()
 class GGJ2025_API ABubbleBlob : public AActor
@@ -71,6 +86,11 @@ private:
 	// Index of the second spline point
 	int32 EditableSplinePointIndex;
 
+	void DrawDebugBubbles(float DeltaTime);
+
+	bool CanSpawnAtom();
+
+
 public:
 	UFUNCTION(BlueprintCallable, Category = "Bubble")
 	void MakeBubbleAtom();
@@ -83,6 +103,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Bubble")
 	FOnBlobStuck OnBlobStuck;
+
+	UPROPERTY(BlueprintAssignable, Category = "Bubble")
+	FOnBlobEvaluation OnBlobEvaluation;
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Spline")
