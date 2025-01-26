@@ -2,6 +2,7 @@
 #include "BubbleBlobTarget.h"
 #include "Components/SphereComponent.h"
 #include "Components/BubbleSplineComponent.h"
+#include "BubbleGameFunctionLibrary.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
 
@@ -35,7 +36,7 @@ void ABubbleBlob::BeginPlay()
     Super::BeginPlay();
     EditableSplinePointIndex = 0;
     MakeBubbleAtom();
-
+    BubbleState = EBubbleState::Blowing;
     EditableSplinePointIndex = SplineComponent->GetNumberOfSplinePoints() - 1;
 }
 
@@ -92,19 +93,19 @@ void ABubbleBlob::OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedCompon
         }
 
         CloseBlob();
-        if (false == bLocked)
+        if (BubbleState < EBubbleState::Locked)
         {
             OnBlobStuck.Broadcast();
         }
         if (false == OtherActor->IsA<ABubbleBlob>())
         {
             // Handle overlap with other actors
-            StopAtoms();
+            StopAndLockAtoms();
 
             // Iterate linked blobs and set their atoms' bMoving to false
             for (ABubbleBlob* LinkedBlob : LinkedBlobs)
             {
-                LinkedBlob->StopAtoms();
+                LinkedBlob->StopAndLockAtoms();
             }
         }
         else
@@ -117,10 +118,10 @@ void ABubbleBlob::OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedCompon
 
                 if (bLocked || OtherBubbleBlob->bLocked)
                 {
-                    StopAtoms();
+                    StopAndLockAtoms();
                     for (ABubbleBlob* LinkedBlob : LinkedBlobs)
                     {
-                        LinkedBlob->StopAtoms();
+                        LinkedBlob->StopAndLockAtoms();
                     }
                 }
             }
@@ -128,13 +129,14 @@ void ABubbleBlob::OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedCompon
     }
 }
 
-void ABubbleBlob::StopAtoms()
+void ABubbleBlob::StopAndLockAtoms()
 {
     bLocked = true;
+    BubbleState = EBubbleState::Locked;
+    LockedInTime = 0.f;
     for (FBubbleAtom& BubbleAtom : BubbleAtoms)
     {
         BubbleAtom.bMoving = false;
-        BubbleAtom.LockedInTime = 0.f;
     }
 }
 
@@ -157,10 +159,11 @@ void ABubbleBlob::SplitBlob()
 
 void ABubbleBlob::CloseBlob()
 {
-    if (EditableSplinePointIndex != INDEX_NONE)
+    if (BubbleState == EBubbleState::Blowing)
     {
         MakeBubbleAtom();
         EditableSplinePointIndex = INDEX_NONE;
+        BubbleState = EBubbleState::Closed;
         if (OnBlobClosed.IsBound())
         {
             OnBlobClosed.Broadcast();
@@ -174,30 +177,76 @@ void ABubbleBlob::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
     DrawDebugBubbles(DeltaTime);
 
-    if (IsBlowing())
+    switch (BubbleState)
     {
+    case EBubbleState::Blowing:
         if (CanSpawnAtom())
         {
             SplitBlob();
         }
+        break;
+    case EBubbleState::Locked:
+        UpdateLocked(DeltaTime);
+        break;
+    case EBubbleState::GoodBlob:
+        UpdateGood(DeltaTime);
+        break;
+    case EBubbleState::BadBlob:
+        UpdateBad(DeltaTime);
+        break;
     }
-    else
+
+}
+
+void ABubbleBlob::UpdateLocked(float DeltaTime)
+{
+    // check for pop condition
+    LockedInTime += DeltaTime;
+
+    auto* GameData = UBubbleGameFunctionLibrary::GetGameData(this);
+    if (GameData == nullptr)
     {
-        if (bLocked)
+        return;
+    }
+    auto* GameMode = Cast<ABubbleGameMode>(GetWorld()->GetAuthGameMode());
+    if (GameMode == nullptr)
+    {
+        return;
+    }
+    if (LockedInTime > GameData->BlobEvaluationTime)
+    {
+        bool IsGoodBlob = true;
+        for (FBubbleAtom& BubbleAtom : BubbleAtoms)
         {
-            // check for pop condition
-            for (FBubbleAtom& BubbleAtom : BubbleAtoms)
-            {
-                BubbleAtom.LockedInTime += DeltaTime;
-            }
+            BubbleAtom.IsAtomGood = (GameMode->IsSphereComponentValidForAnyBubbleBlobTarget(BubbleAtom.SphereCollision));
+            IsGoodBlob &= BubbleAtom.IsAtomGood;
         }
+        OnBlobEvaluation.Broadcast(BubbleAtoms);
+        
+        BubbleState = IsGoodBlob ? EBubbleState::GoodBlob : EBubbleState::BadBlob;
+        EvaluationTimeStamp = GetWorld()->GetTimeSeconds();
     }
 }
 
-bool ABubbleBlob::IsBlowing() const
+void ABubbleBlob::UpdateGood(float DeltaTime)
 {
-    return EditableSplinePointIndex != INDEX_NONE;
-}  
+}
+
+void ABubbleBlob::UpdateBad(float DeltaTime)
+{
+    float TimeSinceEvaluation = GetWorld()->GetTimeSeconds() - EvaluationTimeStamp;
+    auto* GameData = UBubbleGameFunctionLibrary::GetGameData(this);
+    if (GameData == nullptr)
+    {
+        return;
+    }
+
+    if (TimeSinceEvaluation > GameData->BadBlobExpirationTime)
+    {
+        BubbleState = EBubbleState::Dead;
+        OnBlobExplosion.Broadcast(BubbleAtoms);
+    }
+}
 
 
 void ABubbleBlob::DrawDebugBubbles(float DeltaTime)
