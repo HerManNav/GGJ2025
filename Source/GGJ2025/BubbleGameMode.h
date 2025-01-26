@@ -1,8 +1,10 @@
+
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
 #include "BubbleBlob.h"
+#include "BubbleGameDataAsset.h"
 #include "BubbleGameMode.generated.h"
 
 
@@ -46,4 +48,10 @@ protected:
 	// Array to hold instances of ABubbleBlob
 	UPROPERTY()
 	TArray<TObjectPtr<class ABubbleBlobTarget>> BubbleBlobTargets;
+
+public:
+
+	// Property to hold the BubbleGameDataAsset, BlueprintReadOnly
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "BubbleGame")
+	UBubbleGameDataAsset* BubbleGameDataAsset;
 };
