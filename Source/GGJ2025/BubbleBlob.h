@@ -12,11 +12,11 @@ struct FBubbleAtom
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
 	float SpawnTime;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
 	float Speed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bubble")
+	bool IsAtomGood;
 
 	bool bMoving = true;
 
@@ -26,27 +26,27 @@ struct FBubbleAtom
 
 	float LockedInTime;
 
-	UPROPERTY(Transient)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USphereComponent* SphereCollision = nullptr;
 };
+
+//USTRUCT(BlueprintType)
+//struct FBubbleEvaluation
+//{
+//	GENERATED_BODY()
+//
+//	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
+//	USphereComponent* AtomSphere;
+//
+//	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
+//	bool bIsGood;
+//};
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlobClosed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobAtomCreated, const FVector&, BubbleAtomLocation);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlobStuck);
-
-USTRUCT(BlueprintType)
-struct FBubbleEvaluation
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
-	USphereComponent* AtomSphere;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
-	bool bIsGood;
-};
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobEvaluation, TArray<FBubbleEvaluation>, BubbleEvaluation);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobEvaluation, TArray<FBubbleAtom>, BubbleAtoms);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobExplosion, TArray<FBubbleAtom>, BubbleAtoms);
 
 UCLASS()
 class GGJ2025_API ABubbleBlob : public AActor
@@ -106,6 +106,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Bubble")
 	FOnBlobEvaluation OnBlobEvaluation;
+
+	UPROPERTY(BlueprintAssignable, Category = "Bubble")
+	FOnBlobExplosion OnBlobExplosion;
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Spline")
