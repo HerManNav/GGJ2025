@@ -250,6 +250,7 @@ void ABubbleBlob::UpdateBad(float DeltaTime)
     {
         BubbleState = EBubbleState::Dead;
         OnBlobExplosion.Broadcast(BubbleAtoms);
+        Destroy();
     }
 }
 
