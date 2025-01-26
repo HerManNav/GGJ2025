@@ -87,17 +87,13 @@ void ABubbleBlobTarget::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    float accumFillAccuracy = 0;
-    for (UBubbleSphereComponent* bubbleTargetData : BubbleTargetDatas)
+    if (bDebugAccuracy)
     {
-        const float fillAccuracy = bubbleTargetData->GetFillAccuracy();
-        accumFillAccuracy += fillAccuracy;
-    }
-
-    if (0.f < accumFillAccuracy)
-    {
-        const float finalAccuracy = accumFillAccuracy/static_cast<float>(BubbleTargetDatas.Num());
-        UE_LOG(LogTemp, Warning, TEXT("final accuracy = '%f'"), finalAccuracy);
+        float fillAccuracy = ComputeFillAccuracy();
+        if (0.f < fillAccuracy)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Bubble target '%s' fill accuracy = '%f'"), *GetName(), fillAccuracy);
+        }
     }
 }
 
@@ -114,6 +110,11 @@ bool ABubbleBlobTarget::IsSphereAccounting(const class USphereComponent* sphereC
     }
 
     return result;
+}
+
+bool ABubbleBlobTarget::IsFill() const
+{
+    return (ComputeFillAccuracy() >= SatisfyPct);
 }
 
 void ABubbleBlobTarget::GenerateData()
@@ -139,7 +140,7 @@ void ABubbleBlobTarget::GenerateData()
                 // Create a sphere collision component
                 bubbleTargetData->InitSphereRadius(BeadDiameter / 2.0f);
                 bubbleTargetData->SetWorldLocation(SplineLocation);
-                bubbleTargetData->SetHiddenInGame(false);
+                bubbleTargetData->SetHiddenInGame(!bShowTargetsInGame);
                 bubbleTargetData->SetCollisionProfileName(TEXT("BubbleBlob"));
                 bubbleTargetData->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
                 bubbleTargetData->SetGenerateOverlapEvents(true);
@@ -169,6 +170,24 @@ void ABubbleBlobTarget::ClearBubbleData()
     }
 
     BubbleTargetDatas.Empty();
+}
+
+float ABubbleBlobTarget::ComputeFillAccuracy() const
+{
+    float finalAccuracy = 0.f;
+    float accumFillAccuracy = 0;
+    for (UBubbleSphereComponent* bubbleTargetData : BubbleTargetDatas)
+    {
+        const float fillAccuracy = bubbleTargetData->GetFillAccuracy();
+        accumFillAccuracy += fillAccuracy;
+    }
+
+    if (0.f < accumFillAccuracy)
+    {
+        finalAccuracy = accumFillAccuracy / static_cast<float>(BubbleTargetDatas.Num());
+    }
+
+    return finalAccuracy;
 }
 
 #if WITH_EDITOR

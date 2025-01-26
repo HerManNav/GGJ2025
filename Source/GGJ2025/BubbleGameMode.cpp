@@ -3,6 +3,8 @@
 
 #include "BubbleGameMode.h"
 #include "BubbleBlobTarget.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
 
 void ABubbleGameMode::RegisterBlob(ABubbleBlob* Blob)
 {
@@ -12,6 +14,38 @@ void ABubbleGameMode::RegisterBlob(ABubbleBlob* Blob)
 void ABubbleGameMode::RegisterBlobTarget(ABubbleBlobTarget* BlobTarget)
 {
     BubbleBlobTargets.Add(BlobTarget);
+}
+
+void ABubbleGameMode::EvaluateWinCondition()
+{
+    bool bWin = false;
+
+    for (const ABubbleBlobTarget* bubbleBlogTarget : BubbleBlobTargets)
+    {
+        bWin = bubbleBlogTarget->IsFill();
+        if (false == bWin)
+        {
+            break;
+        }
+    }
+
+    if (bWin)
+    {
+        RestartCurrentLevel();
+    }
+}
+
+void ABubbleGameMode::RestartCurrentLevel()
+{
+    UWorld* World = GetWorld();
+    if (World)
+    {
+        APlayerController* PC = UGameplayStatics::GetPlayerControllerFromID(World, 0);
+        if (ensureAlways(PC))
+        {
+            PC->RestartLevel();
+        }
+    }
 }
 
 bool ABubbleGameMode::IsSphereComponentValidForAnyBubbleBlobTarget(const class USphereComponent* sphereComponent) const

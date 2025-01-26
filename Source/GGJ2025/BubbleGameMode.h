@@ -18,6 +18,14 @@ public:
 	// Method to register a blob target
 	void RegisterBlobTarget(ABubbleBlobTarget* BlobTarget);
 
+	// Checks whether we won
+	UFUNCTION(BlueprintCallable)
+	void EvaluateWinCondition();
+
+	// restart current level
+	UFUNCTION(BlueprintCallable)
+	void RestartCurrentLevel();
+
 	// Check whether an sphereComponent is accounting for score in any bubble blog target
 	UFUNCTION(BlueprintCallable, Category = "BubbleBlobs")
 	bool IsSphereComponentValidForAnyBubbleBlobTarget(const class USphereComponent* sphereComponent) const;
