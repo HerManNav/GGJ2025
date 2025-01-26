@@ -7,7 +7,7 @@
 #include "Engine/Engine.h"
 
 // Console variable to toggle debug draw for bubble atoms
-static int32 CVarDebugDrawBubbleAtoms = 1;
+static int32 CVarDebugDrawBubbleAtoms = 0;
 FAutoConsoleVariableRef CVarDebugDrawBubbleAtomsRef(
     TEXT("BubbleBlob.DebugDrawBubbleAtoms"),
     CVarDebugDrawBubbleAtoms,
@@ -235,6 +235,22 @@ void ABubbleBlob::UpdateLocked(float DeltaTime)
 
 void ABubbleBlob::UpdateGood(float DeltaTime)
 {
+    float TimeSinceEvaluation = GetWorld()->GetTimeSeconds() - EvaluationTimeStamp;
+    auto* GameData = UBubbleGameFunctionLibrary::GetGameData(this);
+    if (GameData == nullptr)
+    {
+        return;
+    }
+
+    if (TimeSinceEvaluation > GameData->GoodBlobWinConditionCheckTime)
+    {
+        BubbleState = EBubbleState::Dormant;
+        auto* GameMode = Cast<ABubbleGameMode>(GetWorld()->GetAuthGameMode());
+        if (GameMode != nullptr)
+        {
+            GameMode->EvaluateWinCondition();
+        }
+    }
 }
 
 void ABubbleBlob::UpdateBad(float DeltaTime)
@@ -285,8 +301,12 @@ void ABubbleBlob::DrawDebugBubbles(float DeltaTime)
             BubbleStateText = TEXT("BadBlob");
             break;
         case EBubbleState::Dead:
-            BubbleColor = FColorList::DustyRose;
+            BubbleColor = FColorList::White;
             BubbleStateText = TEXT("Dead");
+            break;
+        case EBubbleState::Dormant:
+            BubbleColor = FColorList::OldGold;
+            BubbleStateText = TEXT("Dormant");
             break;
         default:
             BubbleColor = FColor::White;

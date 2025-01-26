@@ -5,7 +5,6 @@
 #include "BubbleBlob.h"
 #include "BubbleGameMode.h"
 
-PRAGMA_DISABLE_OPTIMIZATION
 
 ABubbleBlobTarget::ABubbleBlobTarget()
 {
@@ -211,4 +210,3 @@ void ABubbleBlobTarget::OnSplineEdited()
 
 #endif // WITH_EDITOR
 
-PRAGMA_ENABLE_OPTIMIZATION

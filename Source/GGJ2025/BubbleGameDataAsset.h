@@ -19,4 +19,7 @@ public:
 	// Time after which a bad blob expires
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Blob")
 	float BadBlobExpirationTime = 3.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Blob")
+	float GoodBlobWinConditionCheckTime = 3.f;
 };
