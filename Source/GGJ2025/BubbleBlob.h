@@ -39,7 +39,8 @@ enum class EBubbleState : uint8
     Locked,
     GoodBlob,
 	BadBlob,
-	Dead
+	Dead,
+	Dormant
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlobClosed);
