@@ -223,7 +223,7 @@ void ABubbleBlob::UpdateLocked(float DeltaTime)
         bool IsGoodBlob = true;
         for (FBubbleAtom& BubbleAtom : BubbleAtoms)
         {
-            BubbleAtom.IsAtomGood = (GameMode->IsSphereComponentValidForAnyBubbleBlobTarget(BubbleAtom.SphereCollision));
+            BubbleAtom.IsAtomGood = (GameMode->IsSphereComponentOverlappingAnyBubbleBlobTarget(BubbleAtom.SphereCollision));
             IsGoodBlob &= BubbleAtom.IsAtomGood;
         }
         OnBlobEvaluation.Broadcast(BubbleAtoms);
