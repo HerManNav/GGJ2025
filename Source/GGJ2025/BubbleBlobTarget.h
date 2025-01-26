@@ -28,6 +28,8 @@ public:
 
     bool IsSphereAccounting(const class USphereComponent* sphereComponent) const;
 
+    bool IsFill() const;
+
 #if WITH_EDITOR
     virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif // WITH_EDITOR
@@ -48,6 +50,8 @@ private:
 
     void ClearBubbleData();
 
+    float ComputeFillAccuracy() const;
+
 private:
 
     // Spline component
@@ -66,4 +70,14 @@ private:
     // Bead diameter
     UPROPERTY(EditAnywhere, Category = "Spline")
     float BeadDiameter = 50.f;
+
+    UPROPERTY(EditAnywhere, Category = "Debug")
+    bool bShowTargetsInGame = true;
+
+    UPROPERTY(EditAnywhere, Category = "Debug")
+    bool bDebugAccuracy = true;
+
+    // min pct to safisfy this target
+    UPROPERTY(EditAnywhere, Category = "Gameplay")
+    float SatisfyPct = 0.7f;
 };
