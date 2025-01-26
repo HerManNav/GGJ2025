@@ -4,18 +4,6 @@
 #include "GameFramework/Actor.h"
 #include "BubbleBlobTarget.generated.h"
 
-USTRUCT(BlueprintType)
-struct FBubbleTargetData
-{
-    GENERATED_BODY()
-
-    UPROPERTY(Transient)
-    TObjectPtr<class USphereComponent> SphereCollision;
-
-    UPROPERTY(Transient)
-    TArray<TObjectPtr<USphereComponent>> PotentialCollisions;
-};
-
 UCLASS()
 class GGJ2025_API ABubbleBlobTarget : public AActor
 {
@@ -24,6 +12,8 @@ class GGJ2025_API ABubbleBlobTarget : public AActor
     ABubbleBlobTarget();
 
 public:
+
+    virtual void OnConstruction(const FTransform& Transform) override;
 
     // New event for when a bubble atom begins overlap
     UFUNCTION(BlueprintCallable, Category = "Bubble")
@@ -38,12 +28,13 @@ public:
 
 #if WITH_EDITOR
     virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-    virtual void PostLoad() override;
 #endif // WITH_EDITOR
 
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
+
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     
     // overridden to destroy all the already generated bubble atoms
     void GenerateData();
@@ -53,7 +44,7 @@ private:
     void OnSplineEdited();
 #endif
 
-    void ClearBubbleAtoms();
+    void ClearBubbleData();
 
 private:
 
@@ -68,7 +59,7 @@ private:
     TArray<TObjectPtr<class USphereComponent>> CachedSphereComponents;
 
     UPROPERTY()
-    TArray<FBubbleTargetData> BubbleTargetDatas;
+    TArray<class UBubbleSphereComponent*> BubbleTargetDatas;
 
     // Bead diameter
     UPROPERTY(EditAnywhere, Category = "Spline")

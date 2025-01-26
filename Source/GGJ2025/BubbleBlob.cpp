@@ -1,4 +1,5 @@
 #include "BubbleBlob.h"
+#include "BubbleBlobTarget.h"
 #include "Components/SphereComponent.h"
 #include "Components/BubbleSplineComponent.h"
 #include "DrawDebugHelpers.h"
@@ -85,6 +86,11 @@ void ABubbleBlob::OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedCompon
 {
     if (OtherActor && (OtherActor != this) && OtherComp)
     {
+        if (OtherActor->IsA<ABubbleBlobTarget>())
+        {
+            return;
+        }
+
         CloseBlob();
         OnBlobStuck.Broadcast();
         if (false == OtherActor->IsA<ABubbleBlob>())

@@ -1,9 +1,10 @@
 #include "BubbleBlobTarget.h"
 #include "Components/BubbleSplineComponent.h"
+#include "Components/BubbleSphereComponent.h"
 #include "Components/SphereComponent.h"
 #include "BubbleBlob.h"
 
-
+PRAGMA_DISABLE_OPTIMIZATION
 
 ABubbleBlobTarget::ABubbleBlobTarget()
 {
@@ -15,27 +16,61 @@ ABubbleBlobTarget::ABubbleBlobTarget()
     SplineComponent->SetupAttachment(RootComponent);
     SplineComponent->SetDrawDebug(true);
 
+#if WITH_EDITOR
     SplineComponent->OnSplineEdited = FSimpleDelegate::CreateUObject(this, &ThisClass::OnSplineEdited);
+#endif
+}
+
+void ABubbleBlobTarget::OnConstruction(const FTransform& Transform)
+{
+    Super::OnConstruction(Transform);
+
+    GenerateData();
 }
 
 void ABubbleBlobTarget::BeginPlay()
 {
     Super::BeginPlay();
-    
-    GenerateData();
+}
+
+void ABubbleBlobTarget::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    Super::EndPlay(EndPlayReason);
+
+    ClearBubbleData();
 }
 
 void ABubbleBlobTarget::OnBubbleBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (ABubbleBlob* otherBubble = Cast<ABubbleBlob>(OtherActor))
+    if (OverlappedComponent != OtherComp)
     {
+        if (ABubbleBlob* otherBubble = Cast<ABubbleBlob>(OtherActor))
+        {
+            if (UBubbleSphereComponent* bubbleTargetData = Cast<UBubbleSphereComponent>(OverlappedComponent))
+            {
+                if (USphereComponent* otherSphere = Cast<USphereComponent>(OtherComp))
+                {
+                    bubbleTargetData->AddPotentialCollision(otherSphere);
+                }
+            }
+        }
     }
 }
 
 void ABubbleBlobTarget::OnBubbleEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-    if (ABubbleBlob* otherBubble = Cast<ABubbleBlob>(OtherActor))
+    if (OverlappedComponent != OtherComp)
     {
+        if (ABubbleBlob* otherBubble = Cast<ABubbleBlob>(OtherActor))
+        {
+            if (UBubbleSphereComponent* bubbleTargetData = Cast<UBubbleSphereComponent>(OverlappedComponent))
+            {
+                if (USphereComponent* otherSphere = Cast<USphereComponent>(OtherComp))
+                {
+                    bubbleTargetData->RemovePotentialCollision(otherSphere);
+                }
+            }
+        }
     }
 }
 
@@ -46,10 +81,10 @@ void ABubbleBlobTarget::Tick(float DeltaTime)
 
 void ABubbleBlobTarget::GenerateData()
 {
-    if (false == HasAnyFlags(RF_ClassDefaultObject| RF_ArchetypeObject))
+    if (false == HasAnyFlags(RF_ClassDefaultObject|RF_ArchetypeObject|RF_Transient))
     {
         // destroy all the already generated bubble atoms
-        ClearBubbleAtoms();
+        ClearBubbleData();
 
         // if spline component is ok re add the sphere components
         if (ensureAlways(SplineComponent))
@@ -59,19 +94,22 @@ void ABubbleBlobTarget::GenerateData()
 
             while (Distance <= SplineLength)
             {
-                BubbleTargetDatas.Add(FBubbleTargetData());
-                FBubbleTargetData& bubbleTargetData = BubbleTargetDatas.Last();
+                BubbleTargetDatas.Add(NewObject<UBubbleSphereComponent>(this));
+                UBubbleSphereComponent* bubbleTargetData = BubbleTargetDatas.Last();
 
                 FVector SplineLocation = SplineComponent->GetLocationAtDistanceAlongSpline(Distance, ESplineCoordinateSpace::World);
 
                 // Create a sphere collision component
-                bubbleTargetData.SphereCollision = NewObject<USphereComponent>(this);
-
-                bubbleTargetData.SphereCollision->InitSphereRadius(BeadDiameter / 2.0f);
-                bubbleTargetData.SphereCollision->SetWorldLocation(SplineLocation);
-                bubbleTargetData.SphereCollision->SetHiddenInGame(false);
-                bubbleTargetData.SphereCollision->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
-                bubbleTargetData.SphereCollision->RegisterComponent();
+                bubbleTargetData->InitSphereRadius(BeadDiameter / 2.0f);
+                bubbleTargetData->SetWorldLocation(SplineLocation);
+                bubbleTargetData->SetHiddenInGame(false);
+                bubbleTargetData->SetCollisionProfileName(TEXT("BubbleBlob"));
+                bubbleTargetData->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
+                bubbleTargetData->SetGenerateOverlapEvents(true);
+                bubbleTargetData->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnBubbleBeginOverlap);
+                bubbleTargetData->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnBubbleEndOverlap);
+                bubbleTargetData->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
+                bubbleTargetData->RegisterComponent();
 
                 Distance += BeadDiameter;
             }
@@ -79,16 +117,18 @@ void ABubbleBlobTarget::GenerateData()
     }
 }
 
-void ABubbleBlobTarget::ClearBubbleAtoms()
+void ABubbleBlobTarget::ClearBubbleData()
 {
-    for (FBubbleTargetData& bubbleTargetData : BubbleTargetDatas)
+    for (UBubbleSphereComponent* bubbleTargetData : BubbleTargetDatas)
     {
-        if (::IsValid(bubbleTargetData.SphereCollision))
+        if (::IsValid(bubbleTargetData))
         {
-            bubbleTargetData.SphereCollision->DestroyComponent();
+            bubbleTargetData->OnComponentBeginOverlap.RemoveDynamic(this, &ThisClass::OnBubbleBeginOverlap);
+            bubbleTargetData->OnComponentEndOverlap.RemoveDynamic(this, &ThisClass::OnBubbleEndOverlap);
+            bubbleTargetData->DetachFromParent();
+            bubbleTargetData->Clear();
+            bubbleTargetData->DestroyComponent();
         }
-
-        bubbleTargetData.PotentialCollisions.Empty();
     }
 
     BubbleTargetDatas.Empty();
@@ -99,19 +139,20 @@ void ABubbleBlobTarget::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 {
     Super::PostEditChangeProperty(PropertyChangedEvent);
     
-    GenerateData();
-}
-
-void ABubbleBlobTarget::PostLoad()
-{
-    Super::PostLoad();
-    
-    GenerateData();
+    if (false == IsRunningGame())
+    {
+        GenerateData();
+    }
 }
 
 void ABubbleBlobTarget::OnSplineEdited()
 {
-    GenerateData();
+    if (false == IsRunningGame())
+    {
+        GenerateData();
+    }
 }
 
 #endif // WITH_EDITOR
+
+PRAGMA_ENABLE_OPTIMIZATION
