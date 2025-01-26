@@ -5,7 +5,8 @@
 #include "BubbleBlobTarget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
-PRAGMA_DISABLE_OPTIMIZATION
+#include "BubbleLevelWorldSettings.h"
+
 void ABubbleGameMode::RegisterBlob(ABubbleBlob* Blob)
 {
     BubbleBlobs.Add(Blob);
@@ -31,7 +32,8 @@ void ABubbleGameMode::EvaluateWinCondition()
 
     if (bWin)
     {
-        RestartCurrentLevel();
+        //RestartCurrentLevel();
+        LoadNextLevel();
     }
 }
 
@@ -72,4 +74,32 @@ TArray<class ABubbleBlobTarget*> ABubbleGameMode::GetBubbleBlobTargets() const
 {
     return BubbleBlobTargets;
 }
-PRAGMA_ENABLE_OPTIMIZATION
+
+
+void ABubbleGameMode::LoadNextLevel()
+{
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Invalid World!"));
+        return;
+    }
+
+    AWorldSettings* BaseWorldSettings = World->GetWorldSettings();
+    if (!BaseWorldSettings)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Invalid World Settings!"));
+        return;
+    }
+
+    ABubbleLevelWorldSettings* BubbleWorldSettings = Cast<ABubbleLevelWorldSettings>(BaseWorldSettings);
+
+    if (BubbleWorldSettings)
+    {
+        if (BubbleWorldSettings->NextLevelToLoad.IsValid())
+        {
+            FString LevelPath = BubbleWorldSettings->NextLevelToLoad.ToString();
+            UGameplayStatics::OpenLevel(World, FName(*LevelPath));
+        }
+    }
+}

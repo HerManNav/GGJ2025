@@ -41,6 +41,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "BubbleBlobs")
 	TArray<class ABubbleBlobTarget*> GetBubbleBlobTargets() const;
 
+	void LoadNextLevel();
+
 protected:
 	// Array to hold instances of ABubbleBlob
 	UPROPERTY()

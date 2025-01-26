@@ -39,7 +39,7 @@ void UBlobMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (CachedSplineComponent && BlobActor)
+	if (CachedSplineComponent && BlobActor && BlobActor->BubbleState != EBubbleState::Blowing)
 	{
 		// Get the current game time
 		float CurrentGameTime = GetWorld()->GetTimeSeconds();
@@ -60,7 +60,7 @@ void UBlobMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 
 			// Calculate the lifetime of the atom
-			float AtomLifetime = CurrentGameTime - Atom.SpawnTime;
+			float AtomLifetime = CurrentGameTime - BlobActor->BubbleAtoms[0].SpawnTime;
 
 			// Do something with AtomLifetime if needed
 
