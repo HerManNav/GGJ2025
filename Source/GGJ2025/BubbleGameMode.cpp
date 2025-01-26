@@ -32,8 +32,8 @@ void ABubbleGameMode::EvaluateWinCondition()
 
     if (bWin)
     {
-        //RestartCurrentLevel();
-        LoadNextLevel();
+        RestartCurrentLevel();
+        //LoadNextLevel();
     }
 }
 
