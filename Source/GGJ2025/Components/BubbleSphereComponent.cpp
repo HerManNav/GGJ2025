@@ -81,4 +81,14 @@ USphereComponent* UBubbleSphereComponent::GetClosestSphereComponent() const
     return result;
 }
 
-PRAGMA_ENABLE_OPTIMIZATION
+bool UBubbleSphereComponent::IsSphereAccountingForOverlap(USphereComponent* sphereComponent) const
+{
+    bool result = false;
+    
+    if (const USphereComponent* closestSphereComponent = GetClosestSphereComponent())
+    {
+        result = (closestSphereComponent->GetName() == sphereComponent->GetName());
+    }
+
+    return result;
+}

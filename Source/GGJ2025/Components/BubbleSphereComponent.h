@@ -28,6 +28,8 @@ public:
 
 	float GetFillAccuracy();
 
+	bool IsSphereAccountingForOverlap(class USphereComponent* sphereComponent) const;
+
 private:
 
 	USphereComponent* GetClosestSphereComponent() const;
