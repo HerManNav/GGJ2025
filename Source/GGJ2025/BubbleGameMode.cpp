@@ -5,7 +5,7 @@
 #include "BubbleBlobTarget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
-
+PRAGMA_DISABLE_OPTIMIZATION
 void ABubbleGameMode::RegisterBlob(ABubbleBlob* Blob)
 {
     BubbleBlobs.Add(Blob);
@@ -72,3 +72,4 @@ TArray<class ABubbleBlobTarget*> ABubbleGameMode::GetBubbleBlobTargets() const
 {
     return BubbleBlobTargets;
 }
+PRAGMA_ENABLE_OPTIMIZATION

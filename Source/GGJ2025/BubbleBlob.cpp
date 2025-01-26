@@ -7,7 +7,7 @@
 #include "Engine/Engine.h"
 
 // Console variable to toggle debug draw for bubble atoms
-static int32 CVarDebugDrawBubbleAtoms = 0;
+static int32 CVarDebugDrawBubbleAtoms = 1;
 FAutoConsoleVariableRef CVarDebugDrawBubbleAtomsRef(
     TEXT("BubbleBlob.DebugDrawBubbleAtoms"),
     CVarDebugDrawBubbleAtoms,
@@ -85,6 +85,11 @@ void ABubbleBlob::MakeBubbleAtom()
 
 void ABubbleBlob::OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+    if (BubbleState >= EBubbleState::Locked)
+    {
+        return;
+    }
+
     if (OtherActor && (OtherActor != this) && OtherComp)
     {
         if (OtherActor->IsA<ABubbleBlobTarget>())
@@ -251,23 +256,57 @@ void ABubbleBlob::UpdateBad(float DeltaTime)
 
 void ABubbleBlob::DrawDebugBubbles(float DeltaTime)
 {
-
     if (CVarDebugDrawBubbleAtoms)
     {
+        FColor BubbleColor;
+        FString BubbleStateText;
+
+        switch (BubbleState)
+        {
+        case EBubbleState::Blowing:
+            BubbleColor = FColor::Blue;
+            BubbleStateText = TEXT("Blowing");
+            break;
+        case EBubbleState::Closed:
+            BubbleColor = FColor::Black;
+            BubbleStateText = TEXT("Closed");
+            break;
+        case EBubbleState::Locked:
+            BubbleColor = FColor::Yellow;
+            BubbleStateText = TEXT("Locked");
+            break;
+        case EBubbleState::GoodBlob:
+            BubbleColor = FColor::Green;
+            BubbleStateText = TEXT("GoodBlob");
+            break;
+        case EBubbleState::BadBlob:
+            BubbleColor = FColor::Red;
+            BubbleStateText = TEXT("BadBlob");
+            break;
+        case EBubbleState::Dead:
+            BubbleColor = FColorList::DustyRose;
+            BubbleStateText = TEXT("Dead");
+            break;
+        default:
+            BubbleColor = FColor::White;
+            BubbleStateText = TEXT("Unknown");
+            break;
+        }
+
         for (const FBubbleAtom& BubbleAtom : BubbleAtoms)
         {
             if (BubbleAtom.SplinePointIndex != INDEX_NONE)
             {
                 FVector BubbleLocation = SplineComponent->GetLocationAtSplinePoint(BubbleAtom.SplinePointIndex, ESplineCoordinateSpace::World);
-                DrawDebugSphere(GetWorld(), BubbleLocation, BeadDiameter / 2.0f, 12, FColor::Green, false, -1.0f, 100, 1.0f);
-                DrawDebugString(GetWorld(), BubbleLocation, FString::FromInt(BubbleAtom.SplinePointIndex), nullptr, FColor::White, DeltaTime, false);
+                DrawDebugSphere(GetWorld(), BubbleLocation, BeadDiameter / 2.0f, 12, BubbleColor, false, -1.0f, 100, 2.0f);
+                DrawDebugString(GetWorld(), BubbleLocation, FString::FromInt(BubbleAtom.SplinePointIndex) + TEXT(" - ") + BubbleStateText, nullptr, FColor::White, DeltaTime, false);
             }
         }
 
         if (EditableSplinePointIndex != INDEX_NONE)
         {
-            DrawDebugSphere(GetWorld(), SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World), BeadDiameter / 2.0f, 12, FColor::Red, false, -1.0f, 100, 1.0f);
-            DrawDebugString(GetWorld(), SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World), FString::FromInt(EditableSplinePointIndex), nullptr, FColor::White, DeltaTime, false);
+            DrawDebugSphere(GetWorld(), SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World), BeadDiameter / 2.0f, 12, FColor::Red, false, -1.0f, 100, 2.0f);
+            DrawDebugString(GetWorld(), SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World), FString::FromInt(EditableSplinePointIndex) + TEXT(" - ") + BubbleStateText, nullptr, FColor::White, DeltaTime, false);
         }
     }
 }
