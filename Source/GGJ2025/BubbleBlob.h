@@ -41,17 +41,6 @@ enum class EBubbleState : uint8
 	BadBlob,
 	Dead
 };
-//USTRUCT(BlueprintType)
-//struct FBubbleEvaluation
-//{
-//	GENERATED_BODY()
-//
-//	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
-//	USphereComponent* AtomSphere;
-//
-//	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
-//	bool bIsGood;
-//};
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlobClosed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobAtomCreated, const FVector&, BubbleAtomLocation);
