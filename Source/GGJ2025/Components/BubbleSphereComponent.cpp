@@ -83,9 +83,13 @@ bool UBubbleSphereComponent::IsSphereAccountingForOverlap(const USphereComponent
 {
     bool result = false;
     
-    if (const USphereComponent* closestSphereComponent = GetClosestSphereComponent())
+    for (USphereComponent* potentialCollision : PotentialCollisions)
     {
-        result = (closestSphereComponent->GetName() == sphereComponent->GetName());
+        result = (potentialCollision->GetName() == sphereComponent->GetName());
+        if (result)
+        {
+            break;
+        }
     }
 
     return result;

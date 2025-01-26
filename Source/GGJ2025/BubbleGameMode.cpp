@@ -48,7 +48,7 @@ void ABubbleGameMode::RestartCurrentLevel()
     }
 }
 
-bool ABubbleGameMode::IsSphereComponentValidForAnyBubbleBlobTarget(const class USphereComponent* sphereComponent) const
+bool ABubbleGameMode::IsSphereComponentOverlappingAnyBubbleBlobTarget(const class USphereComponent* sphereComponent) const
 {
     bool result = false;
     for (const ABubbleBlobTarget* bubbleBlogTarget : BubbleBlobTargets)

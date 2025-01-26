@@ -30,7 +30,7 @@ public:
 
 	// Check whether an sphereComponent is accounting for score in any bubble blog target
 	UFUNCTION(BlueprintCallable, Category = "BubbleBlobs")
-	bool IsSphereComponentValidForAnyBubbleBlobTarget(const class USphereComponent* sphereComponent) const;
+	bool IsSphereComponentOverlappingAnyBubbleBlobTarget(const class USphereComponent* sphereComponent) const;
 
 	// Getter for the blobs array, BlueprintCallable
 	UFUNCTION(BlueprintCallable, Category = "BubbleBlobs")
