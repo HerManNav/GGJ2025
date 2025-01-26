@@ -15,12 +15,27 @@ public:
 	// Method to register a blob
 	void RegisterBlob(ABubbleBlob* Blob);
 
+	// Method to register a blob target
+	void RegisterBlobTarget(ABubbleBlobTarget* BlobTarget);
+
+	// Check whether an sphereComponent is accounting for score in any bubble blog target
+	UFUNCTION(BlueprintCallable, Category = "BubbleBlobs")
+	bool IsSphereComponentValidForAnyBubbleBlobTarget(const class USphereComponent* sphereComponent) const;
+
 	// Getter for the blobs array, BlueprintCallable
 	UFUNCTION(BlueprintCallable, Category = "BubbleBlobs")
 	TArray<ABubbleBlob*> GetBubbleBlobs() const;
+
+	// Getter for the blobs array, BlueprintCallable
+	UFUNCTION(BlueprintCallable, Category = "BubbleBlobs")
+	TArray<class ABubbleBlobTarget*> GetBubbleBlobTargets() const;
 
 protected:
 	// Array to hold instances of ABubbleBlob
 	UPROPERTY()
 	TArray<ABubbleBlob*> BubbleBlobs;
+
+	// Array to hold instances of ABubbleBlob
+	UPROPERTY()
+	TArray<TObjectPtr<class ABubbleBlobTarget>> BubbleBlobTargets;
 };

@@ -79,7 +79,7 @@ USphereComponent* UBubbleSphereComponent::GetClosestSphereComponent() const
     return result;
 }
 
-bool UBubbleSphereComponent::IsSphereAccountingForOverlap(USphereComponent* sphereComponent) const
+bool UBubbleSphereComponent::IsSphereAccountingForOverlap(const USphereComponent* sphereComponent) const
 {
     bool result = false;
     

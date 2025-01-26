@@ -26,6 +26,8 @@ public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
+    bool IsSphereAccounting(const class USphereComponent* sphereComponent) const;
+
 #if WITH_EDITOR
     virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif // WITH_EDITOR
