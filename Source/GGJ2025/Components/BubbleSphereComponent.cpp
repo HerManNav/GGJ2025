@@ -85,7 +85,9 @@ bool UBubbleSphereComponent::IsSphereAccountingForOverlap(const USphereComponent
     
     for (USphereComponent* potentialCollision : PotentialCollisions)
     {
-        result = (potentialCollision->GetName() == sphereComponent->GetName());
+        const bool bIsMatchingOwners = (potentialCollision->GetOwner() == sphereComponent->GetOwner());
+        
+        result = bIsMatchingOwners && (potentialCollision->GetName() == sphereComponent->GetName());
         if (result)
         {
             break;
