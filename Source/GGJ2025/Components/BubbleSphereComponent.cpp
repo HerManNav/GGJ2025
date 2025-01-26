@@ -3,8 +3,6 @@
 
 #include "BubbleSphereComponent.h"
 
-PRAGMA_DISABLE_OPTIMIZATION
-
 /*UBubbleSphereComponent::UBubbleSphereComponent()
 {
    UE_LOG(LogTemp, Warning, TEXT(" ---- constructed bubble sphere component '%s'"), *GetName());
