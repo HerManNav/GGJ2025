@@ -28,7 +28,7 @@ public:
 
 	float GetFillAccuracy();
 
-	bool IsSphereAccountingForOverlap(class USphereComponent* sphereComponent) const;
+	bool IsSphereAccountingForOverlap(const class USphereComponent* sphereComponent) const;
 
 private:
 

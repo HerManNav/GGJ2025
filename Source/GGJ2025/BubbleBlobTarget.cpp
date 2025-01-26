@@ -3,6 +3,7 @@
 #include "Components/BubbleSphereComponent.h"
 #include "Components/SphereComponent.h"
 #include "BubbleBlob.h"
+#include "BubbleGameMode.h"
 
 PRAGMA_DISABLE_OPTIMIZATION
 
@@ -31,6 +32,14 @@ void ABubbleBlobTarget::OnConstruction(const FTransform& Transform)
 void ABubbleBlobTarget::BeginPlay()
 {
     Super::BeginPlay();
+
+    // Cache reference to BubbleGameMode
+    ABubbleGameMode* GameMode = Cast<ABubbleGameMode>(GetWorld()->GetAuthGameMode());
+    if (ensureAlways(GameMode))
+    {
+        // Successfully casted and cached the reference
+        GameMode->RegisterBlobTarget(this);
+    }
 }
 
 void ABubbleBlobTarget::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -90,6 +99,21 @@ void ABubbleBlobTarget::Tick(float DeltaTime)
         const float finalAccuracy = accumFillAccuracy/static_cast<float>(BubbleTargetDatas.Num());
         UE_LOG(LogTemp, Warning, TEXT("final accuracy = '%f'"), finalAccuracy);
     }
+}
+
+bool ABubbleBlobTarget::IsSphereAccounting(const class USphereComponent* sphereComponent) const
+{
+    bool result = false;
+    for (UBubbleSphereComponent* bubbleTargetData : BubbleTargetDatas)
+    {
+        if (bubbleTargetData->IsSphereAccountingForOverlap(sphereComponent))
+        {
+            result = true;
+            break;
+        }
+    }
+
+    return result;
 }
 
 void ABubbleBlobTarget::GenerateData()
