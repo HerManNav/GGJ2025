@@ -134,6 +134,7 @@ void ABubbleBlob::StopAtoms()
     for (FBubbleAtom& BubbleAtom : BubbleAtoms)
     {
         BubbleAtom.bMoving = false;
+        BubbleAtom.LockedInTime = 0.f;
     }
 }
 
@@ -171,6 +172,36 @@ void ABubbleBlob::CloseBlob()
 void ABubbleBlob::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+    DrawDebugBubbles(DeltaTime);
+
+    if (IsBlowing())
+    {
+        if (CanSpawnAtom())
+        {
+            SplitBlob();
+        }
+    }
+    else
+    {
+        if (bLocked)
+        {
+            // check for pop condition
+            for (FBubbleAtom& BubbleAtom : BubbleAtoms)
+            {
+                BubbleAtom.LockedInTime += DeltaTime;
+            }
+        }
+    }
+}
+
+bool ABubbleBlob::IsBlowing() const
+{
+    return EditableSplinePointIndex != INDEX_NONE;
+}  
+
+
+void ABubbleBlob::DrawDebugBubbles(float DeltaTime)
+{
 
     if (CVarDebugDrawBubbleAtoms)
     {
@@ -190,12 +221,10 @@ void ABubbleBlob::Tick(float DeltaTime)
             DrawDebugString(GetWorld(), SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World), FString::FromInt(EditableSplinePointIndex), nullptr, FColor::White, DeltaTime, false);
         }
     }
+}
 
-    if (EditableSplinePointIndex == INDEX_NONE)
-    {
-        return;
-    }
-
+bool ABubbleBlob::CanSpawnAtom()
+{
     bool bFreeSpace = true;
 
     TArray<FOverlapResult> OverlapResults;
@@ -231,17 +260,5 @@ void ABubbleBlob::Tick(float DeltaTime)
             }
         }
     }
-
-    DrawDebugSphere(GetWorld(), SplineComponent->GetLocationAtSplinePoint(EditableSplinePointIndex, ESplineCoordinateSpace::World), BeadDiameter / 2.0f, 12, SphereColor, false, -1.0f, 100, 1.0f);
-
-    
-    if (bFreeSpace)
-    {
-        SplitBlob();
-    }
+    return bFreeSpace;
 }
-
-bool ABubbleBlob::IsBlowing() const
-{
-    return EditableSplinePointIndex != INDEX_NONE;
-}  
