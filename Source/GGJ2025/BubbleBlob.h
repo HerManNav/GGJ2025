@@ -40,13 +40,13 @@ struct FBubbleEvaluation
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
-	FVector AtomPosition;
+	USphereComponent* AtomSphere;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
 	bool bIsGood;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobEvaluation, const FBubbleEvaluation&, BubbleEvaluation);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobEvaluation, TArray<FBubbleEvaluation>, BubbleEvaluation);
 
 UCLASS()
 class GGJ2025_API ABubbleBlob : public AActor
