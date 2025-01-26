@@ -45,8 +45,8 @@ enum class EBubbleState : uint8
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlobClosed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobAtomCreated, const FVector&, BubbleAtomLocation);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlobStuck);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobEvaluation, TArray<FBubbleAtom>, BubbleAtoms);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobExplosion, TArray<FBubbleAtom>, BubbleAtoms);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobEvaluation, const TArray<FBubbleAtom>&, BubbleAtoms);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobExplosion, const TArray<FBubbleAtom>&, BubbleAtoms);
 
 UCLASS()
 class GGJ2025_API ABubbleBlob : public AActor
