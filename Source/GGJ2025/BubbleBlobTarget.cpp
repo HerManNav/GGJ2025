@@ -77,6 +77,19 @@ void ABubbleBlobTarget::OnBubbleEndOverlap(UPrimitiveComponent* OverlappedCompon
 void ABubbleBlobTarget::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+
+    float accumFillAccuracy = 0;
+    for (UBubbleSphereComponent* bubbleTargetData : BubbleTargetDatas)
+    {
+        const float fillAccuracy = bubbleTargetData->GetFillAccuracy();
+        accumFillAccuracy += fillAccuracy;
+    }
+
+    if (0.f < accumFillAccuracy)
+    {
+        const float finalAccuracy = accumFillAccuracy/static_cast<float>(BubbleTargetDatas.Num());
+        UE_LOG(LogTemp, Warning, TEXT("final accuracy = '%f'"), finalAccuracy);
+    }
 }
 
 void ABubbleBlobTarget::GenerateData()

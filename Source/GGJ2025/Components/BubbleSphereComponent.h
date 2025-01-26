@@ -26,6 +26,12 @@ public:
 
 	void RemovePotentialCollision(class USphereComponent* sphereComponent);
 
+	float GetFillAccuracy();
+
+private:
+
+	USphereComponent* GetClosestSphereComponent() const;
+
 private:
 
 	UPROPERTY(Transient)

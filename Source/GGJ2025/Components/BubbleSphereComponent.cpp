@@ -3,6 +3,8 @@
 
 #include "BubbleSphereComponent.h"
 
+PRAGMA_DISABLE_OPTIMIZATION
+
 /*UBubbleSphereComponent::UBubbleSphereComponent()
 {
    UE_LOG(LogTemp, Warning, TEXT(" ---- constructed bubble sphere component '%s'"), *GetName());
@@ -28,3 +30,55 @@ void UBubbleSphereComponent::RemovePotentialCollision(class USphereComponent* sp
 {
     PotentialCollisions.Remove(sphereComponent);
 }
+
+float UBubbleSphereComponent::GetFillAccuracy()
+{
+    float result = 0.f;
+
+    if (USphereComponent* closestSphereComponent = GetClosestSphereComponent())
+    {
+        const float radius = GetScaledSphereRadius();
+        const float radiusSq = radius * radius;
+
+        FVector center = GetComponentLocation();
+        center.Y = 0.f;
+        float minDist2DSq = FLT_MAX;
+        
+        FVector otherCenter = closestSphereComponent->GetComponentLocation();
+        otherCenter.Y = 0.f;
+
+        const float dist2DSq = (FVector::DistSquared(center, otherCenter) * 0.5f);
+
+        result = (radiusSq - dist2DSq)/radiusSq;
+    }
+
+    return result;
+}
+
+USphereComponent* UBubbleSphereComponent::GetClosestSphereComponent() const
+{
+    USphereComponent* result = nullptr;
+
+    if (0 < PotentialCollisions.Num())
+    {
+        FVector center = GetComponentLocation();
+        center.Y = 0.f;
+        float minDist2DSq = FLT_MAX;
+        for (USphereComponent* sphereComponent : PotentialCollisions)
+        {
+            FVector otherCenter = sphereComponent->GetComponentLocation();
+            otherCenter.Y = 0.f;
+            
+            const float dist2DSq = FVector::DistSquared(center, otherCenter);
+            if (dist2DSq < minDist2DSq)
+            {
+                minDist2DSq = dist2DSq;
+                result = sphereComponent;
+            }
+        }
+    }
+
+    return result;
+}
+
+PRAGMA_ENABLE_OPTIMIZATION
