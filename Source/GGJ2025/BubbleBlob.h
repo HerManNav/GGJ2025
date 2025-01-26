@@ -24,23 +24,23 @@ struct FBubbleAtom
 
 	float RandomTimeOffset;
 
-	float LockedInTime;
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USphereComponent* SphereCollision = nullptr;
 };
 
-//USTRUCT(BlueprintType)
-//struct FBubbleEvaluation
-//{
-//	GENERATED_BODY()
-//
-//	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
-//	USphereComponent* AtomSphere;
-//
-//	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bubble")
-//	bool bIsGood;
-//};
+
+UENUM(BlueprintType)
+enum class EBubbleState : uint8
+{
+    Blowing,
+	Closed,
+    Locked,
+    GoodBlob,
+	BadBlob,
+	Dead
+};
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlobClosed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlobAtomCreated, const FVector&, BubbleAtomLocation);
@@ -72,7 +72,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Bubble")
 	void OnBubbleAtomBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	void StopAtoms();
+	void StopAndLockAtoms();
 
 private:
 	// Spline component
@@ -89,6 +89,10 @@ private:
 	void DrawDebugBubbles(float DeltaTime);
 
 	bool CanSpawnAtom();
+
+	void UpdateLocked(float DeltaTime);
+	void UpdateGood(float DeltaTime);
+	void UpdateBad(float DeltaTime);
 
 
 public:
@@ -123,11 +127,12 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FBubbleAtom> BubbleAtoms;
 
-	UFUNCTION(BlueprintCallable, Category = "Bubble")
-	bool IsBlowing() const;
-
 	UPROPERTY(Transient)
 	TArray<ABubbleBlob*> LinkedBlobs;
 
 	bool bLocked = false;
+	float LockedInTime;
+	float EvaluationTimeStamp;
+
+	EBubbleState BubbleState = EBubbleState::Blowing;
 };

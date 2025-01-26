@@ -5,7 +5,7 @@
 #include "BubbleBlobTarget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
-
+PRAGMA_DISABLE_OPTIMIZATION
 void ABubbleGameMode::RegisterBlob(ABubbleBlob* Blob)
 {
     BubbleBlobs.Add(Blob);
@@ -48,7 +48,7 @@ void ABubbleGameMode::RestartCurrentLevel()
     }
 }
 
-bool ABubbleGameMode::IsSphereComponentValidForAnyBubbleBlobTarget(const class USphereComponent* sphereComponent) const
+bool ABubbleGameMode::IsSphereComponentOverlappingAnyBubbleBlobTarget(const class USphereComponent* sphereComponent) const
 {
     bool result = false;
     for (const ABubbleBlobTarget* bubbleBlogTarget : BubbleBlobTargets)
@@ -72,3 +72,4 @@ TArray<class ABubbleBlobTarget*> ABubbleGameMode::GetBubbleBlobTargets() const
 {
     return BubbleBlobTargets;
 }
+PRAGMA_ENABLE_OPTIMIZATION
